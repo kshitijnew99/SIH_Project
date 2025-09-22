@@ -258,8 +258,8 @@ const FloatingChatbot: React.FC = () => {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <Card className={`w-80 bg-white shadow-2xl border-0 transition-all duration-300 ${
-        isMinimized ? 'h-16' : 'h-96'
+      <Card className={`w-[336px] bg-white shadow-2xl border-0 transition-all duration-300 ${
+        isMinimized ? 'h-16' : 'h-[460px]'
       }`}>
         <CardHeader className="p-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-t-lg">
           <div className="flex items-center justify-between">
@@ -298,7 +298,7 @@ const FloatingChatbot: React.FC = () => {
         </CardHeader>
 
         {!isMinimized && (
-          <CardContent className="p-0 flex flex-col h-80">
+          <CardContent className="p-0 flex flex-col h-96">
             {/* Connection Status */}
             {!isConnected && (
               <div className="bg-red-50 border-b border-red-200 p-2 text-center">

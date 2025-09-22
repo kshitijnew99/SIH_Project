@@ -16,7 +16,13 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Configure CORS
 const corsOptions = {
-  origin: process.env.CORS_ORIGINS?.split(',') || ["http://localhost:3000", "http://localhost:5173", "http://localhost:8084"],
+  origin: process.env.CORS_ORIGINS?.split(',') || [
+    "http://localhost:3000", 
+    "http://localhost:5173", 
+    "http://localhost:8084",
+    "http://localhost:8085",
+    "http://localhost:8086"
+  ],
   credentials: true
 };
 

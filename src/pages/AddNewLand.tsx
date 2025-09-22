@@ -12,19 +12,36 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import RapidAPIMap from "@/components/RapidAPIMap";
 
+// Indian states list
+const indianStates = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", 
+  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", 
+  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", 
+  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", 
+  "Uttarakhand", "West Bengal"
+];
+
 const formSchema = z.object({
   title: z.string().min(1, "Please enter a title for your land"),
+  location: z.string().min(1, "Please enter land location (city/village, district, state)"),
+  district: z.string().min(1, "Please select district"),
+  state: z.string().min(1, "Please select state"),
+  priceModel: z.enum(["fixed", "percentage"]).default("fixed"),
+  price: z.string().optional(),
+  sharingModel: z.string().optional(),
+  area: z.string().min(1, "Please enter land area"),
+  suitable: z.string().min(1, "Please enter suitable crops"),
+  water: z.string().min(1, "Please describe water availability"),
+  electricity: z.string().min(1, "Please describe electricity status"),
+  soil: z.string().min(1, "Please describe soil type"),
   roadConnectivity: z.string().min(1, "Please select road connectivity type"),
   hasElectricity: z.boolean(),
   waterBody: z.string().min(1, "Please select nearby water body type"),
   soilTestingFile: z.any().optional(),
   gpsMapFile: z.any().optional(),
   fertilityIndex: z.string().min(1, "Please enter fertility index"),
-  landSize: z.string().min(1, "Please enter land size"),
-  address: z.string().min(1, "Please enter land address"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
-  rentalPrice: z.string().min(1, "Please enter rental price per acre"),
   certification: z.string().optional(),
   season: z.string().optional(),
   status: z.enum(['available', 'rented']).default('available'),
@@ -39,15 +56,23 @@ const AddNewLand = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
+      location: "",
+      district: "",
+      state: "",
+      priceModel: "fixed",
+      price: "",
+      sharingModel: "",
+      area: "",
+      suitable: "",
+      water: "",
+      electricity: "",
+      soil: "",
       roadConnectivity: "",
       hasElectricity: false,
       waterBody: "",
       fertilityIndex: "",
-      landSize: "",
-      address: "",
       latitude: undefined,
       longitude: undefined,
-      rentalPrice: "",
       certification: "",
       season: "",
       status: "available",
@@ -61,23 +86,33 @@ const AddNewLand = () => {
       // Get existing lands from localStorage or initialize empty array
       const existingLands = JSON.parse(localStorage.getItem('landListings') || '[]');
       
-      // Format the land data to match the existing card style
+      // Format the land data to match the Land.tsx structure
       const newLand = {
         id: Date.now(),
-        title: values.title || 'Agricultural Plot',
-        location: values.address,
-        landSize: values.landSize,
-        status: 'available',
-        rentalPrice: values.rentalPrice,
-        certification: values.certification || null,
-        season: values.season || null,
-        dateAdded: new Date().toISOString(),
+        title: values.title,
+        location: values.location,
+        district: values.district,
+        state: values.state,
+        priceModel: values.priceModel,
+        price: values.priceModel === "fixed" ? `₹${values.price}/acre/year` : null,
+        sharingModel: values.priceModel === "percentage" ? values.sharingModel : null,
+        water: values.water,
+        electricity: values.electricity,
+        soil: values.soil,
+        image: "/api/placeholder/400/300", // Default placeholder image
+        area: values.area,
+        suitable: values.suitable,
+        // Additional metadata for internal use
         roadConnectivity: values.roadConnectivity,
         hasElectricity: values.hasElectricity,
         waterBody: values.waterBody,
         fertilityIndex: values.fertilityIndex,
         latitude: values.latitude,
-        longitude: values.longitude
+        longitude: values.longitude,
+        certification: values.certification,
+        season: values.season,
+        status: values.status,
+        dateAdded: new Date().toISOString(),
       };
       
       // Save updated list back to localStorage
@@ -132,12 +167,12 @@ const AddNewLand = () => {
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="landSize"
+                  name="area"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Land Size (Acres)</FormLabel>
+                      <FormLabel>Land Area</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.1" placeholder="e.g., 3.2" {...field} />
+                        <Input placeholder="e.g., 3.2 acres" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -146,12 +181,144 @@ const AddNewLand = () => {
 
                 <FormField
                   control={form.control}
-                  name="rentalPrice"
+                  name="priceModel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Rental Price (₹/month/acre)</FormLabel>
+                      <FormLabel>Pricing Model</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select pricing model" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="fixed">Fixed Rental</SelectItem>
+                          <SelectItem value="percentage">Profit Sharing</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {form.watch("priceModel") === "fixed" ? (
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rental Price (₹/acre/year)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 6000" {...field} />
+                        <Input type="number" placeholder="e.g., 25000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="sharingModel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Profit Sharing Ratio (Landowner-Farmer)</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select sharing ratio" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="50-50">50-50</SelectItem>
+                          <SelectItem value="60-40">60-40</SelectItem>
+                          <SelectItem value="70-30">70-30</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location (City/Village)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Nashik, Maharashtra" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select state" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {indianStates.map((state) => (
+                            <SelectItem key={state} value={state}>
+                              {state}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="district"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>District</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Nashik" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="water"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Water Availability</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Bore well + Canal" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="electricity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Electricity Status</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 3-phase connection" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -161,13 +328,30 @@ const AddNewLand = () => {
 
               <FormField
                 control={form.control}
-                name="address"
+                name="soil"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address</FormLabel>
+                    <FormLabel>Soil Type</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Village Name, District, State" {...field} />
+                      <Input placeholder="e.g., Black cotton soil" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="suitable"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Suitable Crops</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Cotton, Soybean, Wheat" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      List the crops that grow well on this land
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -178,7 +362,6 @@ const AddNewLand = () => {
                 <Label>Precise Location (Search or use GPS)</Label>
                 <RapidAPIMap
                   center={mapLocation}
-                  zoom={10}
                   onLocationSelect={(location) => {
                     setMapLocation(location);
                     form.setValue("latitude", location.lat);
