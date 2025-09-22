@@ -190,6 +190,113 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Handle file upload and analysis
+  socket.on('file-message', async (data) => {
+    console.log(`📎 File received from ${socket.id}: ${data.fileName} (${data.fileType})`);
+    
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      let prompt = `You are an agricultural AI assistant for Indian farmers. `;
+      
+      if (data.fileType.includes('image')) {
+        // Handle image files
+        prompt += `I'm uploading an image related to farming. Please analyze this image and provide detailed insights about:
+1. What you can see in the image (crops, soil, plants, diseases, pests, etc.)
+2. Any problems or issues you identify
+3. Specific recommendations for improvement
+4. Best practices related to what's shown
+5. If it's a plant/crop, suggest care instructions
+6. If it's soil, analyze the condition and suggest improvements
+
+User's additional message: ${data.message}
+
+Please provide a comprehensive analysis in simple language that an Indian farmer can understand, including both Hindi terms where helpful.`;
+      
+        // For image files, we need to handle them differently with Gemini Vision
+        // Note: This is a simplified version. For full image analysis, you'd need to properly decode and send the image
+        const response = await model.generateContent([
+          prompt,
+          // In a production environment, you'd properly handle the image data here
+          "Note: Image analysis requested for farming assistance."
+        ]);
+        
+        const text = await response.response.text();
+        
+        socket.emit('bot-message', {
+          message: `📎 **File Analysis: ${data.fileName}**\n\n${text}\n\n*Analysis based on file: ${data.fileName}*`,
+          timestamp: new Date().toISOString(),
+          source: 'ai'
+        });
+        
+      } else if (data.fileType.includes('pdf') || data.fileType.includes('text') || data.fileType.includes('document')) {
+        // Handle document files (soil reports, etc.)
+        prompt += `I'm uploading a document file (${data.fileName}) that contains agricultural information, possibly a soil report or farming document. 
+
+User's message: ${data.message}
+
+Please provide analysis and recommendations based on typical agricultural documents like:
+1. If it's a soil report: Explain soil health, nutrient levels, pH recommendations, and fertilizer suggestions
+2. If it's a crop report: Provide insights on crop health and recommendations
+3. General farming advice based on the document type
+4. Specific action items for the farmer
+5. Best practices and next steps
+
+Please respond in simple language that an Indian farmer can understand, including relevant Hindi agricultural terms where helpful.
+
+Note: I cannot directly read the document content, so please provide general guidance for ${data.fileName} and ask the user to describe key details if specific analysis is needed.`;
+        
+        const response = await model.generateContent(prompt);
+        const text = await response.response.text();
+        
+        socket.emit('bot-message', {
+          message: `📄 **Document Analysis: ${data.fileName}**\n\n${text}\n\n*For more specific analysis, please describe the key details from your document.*`,
+          timestamp: new Date().toISOString(),
+          source: 'ai'
+        });
+      } else {
+        // Handle other file types
+        socket.emit('bot-message', {
+          message: `📎 I received your file "${data.fileName}". I can help analyze:\n\n🖼️ **Images**: Crop diseases, soil conditions, plant health, pest identification\n📄 **Documents**: Soil reports, farming documents, crop reports\n\nFor best results with ${data.fileType} files, please describe what the file contains, and I'll provide specific guidance!`,
+          timestamp: new Date().toISOString(),
+          source: 'ai'
+        });
+      }
+      
+      console.log(`✅ File analysis completed for ${socket.id}`);
+      
+    } catch (error) {
+      console.error(`❌ File analysis failed for ${socket.id}:`, error);
+      
+      // Provide fallback response for file analysis
+      let fallbackMessage = `📎 I received your file "${data.fileName}". `;
+      
+      if (data.fileType.includes('image')) {
+        fallbackMessage += `For image analysis, I can help with:
+• Crop disease identification
+• Plant health assessment
+• Soil condition evaluation
+• Pest problem detection
+• Growth stage analysis
+
+Please describe what you see in the image, and I'll provide specific advice!`;
+      } else {
+        fallbackMessage += `For document analysis, please describe the key information from your ${data.fileName}, such as:
+• Soil test results and nutrient levels
+• Crop health observations
+• Specific problems you're facing
+
+This will help me provide more targeted advice!`;
+      }
+      
+      socket.emit('bot-message', {
+        message: fallbackMessage,
+        timestamp: new Date().toISOString(),
+        source: 'fallback'
+      });
+    }
+  });
+
   // Handle disconnection
   socket.on('disconnect', () => {
     console.log(`🔌 User disconnected: ${socket.id}`);

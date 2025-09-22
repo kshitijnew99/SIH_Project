@@ -15,7 +15,12 @@ import {
   Loader2,
   Settings,
   Wifi,
-  WifiOff
+  WifiOff,
+  Paperclip,
+  Mic,
+  MicOff,
+  Upload,
+  FileText
 } from 'lucide-react';
 
 interface Message {
@@ -24,6 +29,12 @@ interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   source?: 'ai' | 'fallback';
+  fileInfo?: {
+    name: string;
+    size: number;
+    type: string;
+  };
+  isVoice?: boolean;
 }
 
 const FloatingChatbot: React.FC = () => {
@@ -35,14 +46,19 @@ const FloatingChatbot: React.FC = () => {
     {
       id: 'welcome',
       role: 'assistant',
-      content: "🌾 Hello! I'm your KisanConnect AI assistant. How can I help you with your farming needs today?",
+      content: "🌾 Hello! I'm your KisanConnect AI assistant. I can help you with:\n\n📝 Text queries (Hindi/English)\n🎤 Voice messages (बोलकर पूछें)\n📸 Image analysis (crop diseases, soil)\n📄 Document analysis (soil reports)\n\nHow can I help you today?",
       timestamp: new Date()
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isVoiceSupported, setIsVoiceSupported] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Initialize Socket.IO connection
@@ -141,6 +157,13 @@ const FloatingChatbot: React.FC = () => {
     };
   }, [toast]);
 
+  // Initialize voice recognition
+  useEffect(() => {
+    // Check if speech recognition is supported
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    setIsVoiceSupported(!!SpeechRecognition);
+  }, []);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -160,6 +183,12 @@ const FloatingChatbot: React.FC = () => {
   };
 
   const sendMessage = async () => {
+    // If there's a selected file, send file message instead
+    if (selectedFile) {
+      await sendFileMessage();
+      return;
+    }
+
     if (!inputMessage.trim() || !socket || !isConnected) {
       if (!isConnected) {
         toast({
@@ -224,6 +253,183 @@ const FloatingChatbot: React.FC = () => {
     if (socket && isConnected) {
       socket.emit('typing', { isTyping: e.target.value.length > 0 });
     }
+  };
+
+  // Voice recording functions
+  const startVoiceRecording = async () => {
+    if (!isVoiceSupported) {
+      toast({
+        title: "Voice Not Supported",
+        description: "Speech recognition is not supported in your browser",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'hi-IN,en-IN,en-US'; // Support Hindi, Indian English, and US English
+      
+      recognition.onstart = () => {
+        setIsRecording(true);
+        toast({
+          title: "🎤 Recording Started",
+          description: "Speak now... (Hindi/English supported)",
+        });
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputMessage(transcript);
+        setIsRecording(false);
+        
+        toast({
+          title: "🎤 Speech Recognized",
+          description: `"${transcript}"`,
+        });
+        
+        // Optionally auto-send voice messages
+        setTimeout(() => {
+          if (transcript.trim()) {
+            const voiceMessage: Message = {
+              id: Date.now().toString(),
+              content: transcript.trim(),
+              role: 'user',
+              timestamp: new Date(),
+              isVoice: true
+            };
+
+            setMessages(prev => [...prev, voiceMessage]);
+            setInputMessage('');
+            setIsLoading(true);
+
+            // Send message to server via Socket.IO
+            if (socket && isConnected) {
+              socket.emit('chat-message', {
+                message: transcript.trim(),
+                isVoice: true,
+                timestamp: new Date().toISOString()
+              });
+            }
+          }
+        }, 500);
+      };
+
+      recognition.onerror = (event: any) => {
+        setIsRecording(false);
+        toast({
+          title: "Speech Recognition Error",
+          description: `Error: ${event.error}`,
+          variant: "destructive"
+        });
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognition.start();
+    } catch (error) {
+      setIsRecording(false);
+      toast({
+        title: "Voice Recognition Failed",
+        description: "Could not start voice recognition",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    setIsRecording(false);
+  };
+
+  // File handling functions
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Check file size (limit to 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Please select a file smaller than 10MB",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check file type
+      const allowedTypes = [
+        'image/jpeg', 'image/png', 'image/jpg',
+        'application/pdf',
+        'text/plain', 'text/csv',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "File Type Not Supported",
+          description: "Please upload images, PDF, text, or document files",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setSelectedFile(file);
+      setInputMessage(`📎 ${file.name} selected`);
+      
+      toast({
+        title: "File Selected",
+        description: `${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
+      });
+    }
+  };
+
+  const sendFileMessage = async () => {
+    if (!selectedFile || !socket || !isConnected) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const fileData = e.target?.result as string;
+      
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: `📎 Shared file: ${selectedFile.name}`,
+        role: 'user',
+        timestamp: new Date(),
+        fileInfo: {
+          name: selectedFile.name,
+          size: selectedFile.size,
+          type: selectedFile.type
+        }
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+      setIsLoading(true);
+
+      // Send file data to server via Socket.IO
+      socket.emit('file-message', {
+        fileName: selectedFile.name,
+        fileType: selectedFile.type,
+        fileSize: selectedFile.size,
+        fileData: fileData,
+        message: inputMessage || `Please analyze this ${selectedFile.type.includes('image') ? 'image' : 'document'} and provide insights for farming.`,
+        timestamp: new Date().toISOString()
+      });
+
+      setSelectedFile(null);
+      setInputMessage('');
+    };
+
+    reader.readAsDataURL(selectedFile);
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
   };
 
   const formatMessageContent = (content: string) => {
@@ -335,6 +541,41 @@ const FloatingChatbot: React.FC = () => {
                           <p className="text-sm leading-relaxed">
                             {formatMessageContent(message.content)}
                           </p>
+                          
+                          {/* File attachment indicator */}
+                          {message.fileInfo && (
+                            <div className={`mt-2 p-2 rounded border ${
+                              message.role === 'user' 
+                                ? 'bg-green-500 border-green-400' 
+                                : 'bg-gray-50 border-gray-200'
+                            }`}>
+                              <div className="flex items-center space-x-2">
+                                <FileText className={`h-3 w-3 ${
+                                  message.role === 'user' ? 'text-green-100' : 'text-gray-600'
+                                }`} />
+                                <span className={`text-xs ${
+                                  message.role === 'user' ? 'text-green-100' : 'text-gray-600'
+                                }`}>
+                                  {message.fileInfo.name} ({(message.fileInfo.size / 1024).toFixed(1)} KB)
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Voice message indicator */}
+                          {message.isVoice && (
+                            <div className="flex items-center space-x-1 mt-1">
+                              <Mic className={`h-3 w-3 ${
+                                message.role === 'user' ? 'text-green-200' : 'text-gray-500'
+                              }`} />
+                              <span className={`text-xs ${
+                                message.role === 'user' ? 'text-green-200' : 'text-gray-500'
+                              }`}>
+                                Voice message
+                              </span>
+                            </div>
+                          )}
+                          
                           {message.source === 'fallback' && (
                             <p className="text-xs opacity-75 mt-1 italic">
                               *Offline response
@@ -374,30 +615,101 @@ const FloatingChatbot: React.FC = () => {
 
             {/* Input Area */}
             <div className="border-t bg-gray-50 p-3">
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                accept="image/*,application/pdf,.txt,.csv,.doc,.docx"
+                className="hidden"
+              />
+              
+              {/* File selection indicator */}
+              {selectedFile && (
+                <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm text-blue-700">
+                      {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setInputMessage('');
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+              
               <div className="flex space-x-2">
+                {/* File upload button */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={triggerFileUpload}
+                  disabled={!isConnected || isLoading}
+                  className="px-2"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+                
+                {/* Voice input button */}
+                {isVoiceSupported && (
+                  <Button
+                    size="sm"
+                    variant={isRecording ? "destructive" : "outline"}
+                    onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                    disabled={!isConnected || isLoading}
+                    className="px-2"
+                  >
+                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                )}
+                
                 <Input
                   value={inputMessage}
                   onChange={handleInputChange}
                   onKeyPress={handleKeyPress}
-                  placeholder={isConnected ? "Ask me about farming..." : "Connecting..."}
+                  placeholder={isConnected ? (selectedFile ? "Add message (optional)..." : "Ask me about farming...") : "Connecting..."}
                   disabled={!isConnected || isLoading}
                   className="flex-1 border-gray-200 focus:ring-green-500 focus:border-green-500"
                 />
                 <Button
                   onClick={sendMessage}
-                  disabled={!isConnected || isLoading || !inputMessage.trim()}
+                  disabled={!isConnected || isLoading || (!inputMessage.trim() && !selectedFile)}
                   size="sm"
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-              {isConnected && (
-                <p className="text-xs text-green-600 mt-1 flex items-center">
-                  <Wifi className="h-3 w-3 mr-1" />
-                  Connected to AI assistant
-                </p>
-              )}
+              
+              {/* Status indicators */}
+              <div className="flex justify-between items-center mt-1">
+                <div>
+                  {isConnected && (
+                    <p className="text-xs text-green-600 flex items-center">
+                      <Wifi className="h-3 w-3 mr-1" />
+                      Connected to AI assistant
+                    </p>
+                  )}
+                  {isRecording && (
+                    <p className="text-xs text-red-600 flex items-center animate-pulse">
+                      <Mic className="h-3 w-3 mr-1" />
+                      Recording... (Hindi/English supported)
+                    </p>
+                  )}
+                </div>
+                
+                <div className="text-xs text-gray-500">
+                  {isVoiceSupported && "🎤"} 📎 PDF/Images supported
+                </div>
+              </div>
             </div>
           </CardContent>
         )}
