@@ -73,25 +73,173 @@ const agriculturalKnowledge = {
     responses: [
       "Research market prices before planting to choose profitable crops.",
       "Consider direct selling to consumers or joining farmer cooperatives for better prices.",
-      "Diversify crops to reduce market risk and ensure steady income throughout the year."
     ]
   }
 };
 
-// Function to get fallback response based on user input
-function getFallbackResponse(userInput) {
+// Platform-specific data (mock data - in production this would come from database)
+const platformData = {
+  mandiPrices: {
+    "Madhya Pradesh": {
+      "Indore": { wheat: 2200, soybean: 4800, cotton: 6200 },
+      "Bhopal": { wheat: 2150, soybean: 4750, cotton: 6100 },
+      "Jabalpur": { wheat: 2180, soybean: 4820, cotton: 6250 }
+    },
+    "Maharashtra": {
+      "Nashik": { wheat: 2300, soybean: 4900, cotton: 6400 },
+      "Pune": { wheat: 2280, soybean: 4850, cotton: 6300 },
+      "Sangli": { sugarcane: 3200, turmeric: 8500, cotton: 6350 }
+    },
+    "Punjab": {
+      "Amritsar": { wheat: 2400, rice: 2800, vegetables: 1500 },
+      "Ludhiana": { wheat: 2350, rice: 2750, vegetables: 1450 }
+    }
+  },
+  availableLand: {
+    "Madhya Pradesh": { totalAcres: 245, averagePrice: 18000 },
+    "Maharashtra": { totalAcres: 156, averagePrice: 22000 },
+    "Punjab": { totalAcres: 89, averagePrice: 30000 }
+  },
+  tools: [
+    { name: "Soil pH Tester", category: "testing", available: true },
+    { name: "Weather Predictor", category: "planning", available: true },
+    { name: "Crop Disease Identifier", category: "health", available: true },
+    { name: "Market Price Tracker", category: "market", available: true }
+  ]
+};
+
+// Enhanced language detection function (consistent with frontend)
+function detectLanguage(text) {
+  // Check for Hindi Unicode characters
+  const hindiPattern = /[\u0900-\u097F]/;
+  const hasHindiChars = hindiPattern.test(text);
+  
+  if (hasHindiChars) {
+    return 'hindi';
+  }
+  
+  // Check for common Hindi words written in English (transliteration)
+  const hindiTransliterationPatterns = [
+    /\b(mujhe|aapka|kya|hai|mein|ke|ki|ka|se|batao|bataye|chahiye|karke|kaise|kyun|kahan|kab)\b/i,
+    /\b(gehun|chawal|kapas|soyabean|fasal|kheti|mandi|price|bhav|rates)\b/i,
+    /\b(sahayata|madad|sahayyata|jankari|jankariya)\b/i,
+    /\b(aap|hum|main|aapko|humko|hamko|humein|hamein)\b/i
+  ];
+  
+  const hasHindiTransliteration = hindiTransliterationPatterns.some(pattern => pattern.test(text));
+  
+  if (hasHindiTransliteration) {
+    return 'hindi';
+  }
+  
+  // Very strict English-only patterns (only these will get English response)
+  const strictEnglishPatterns = [
+    /^(what are the|show me the|tell me the|give me the|list the|provide the)\s+(current\s+)?(wheat|rice|corn|soybean|cotton)\s+(price|prices|rate|rates)/i,
+    /^(show me|tell me)\s+(available\s+)?(land|farms?|plots?)\s+(for\s+)?(farming|agriculture|rent)/i,
+    /^(hello|hi|hey),?\s+(can you help|help me|i need|please help)/i,
+    /^(what is|how can|can you)\s+.*(platform|kisanconnect|system)/i
+  ];
+  
+  const isStrictEnglish = strictEnglishPatterns.some(pattern => pattern.test(text.trim()));
+  
+  // Default to Hindi unless it's very clearly English
+  return isStrictEnglish ? 'english' : 'hindi';
+}
+
+// Enhanced platform-aware prompt generation
+function generatePlatformAwarePrompt(userMessage, detectedLanguage) {
+  const currentDate = new Date().toLocaleDateString('en-IN');
+  
+  let basePrompt = `You are KisanConnect AI, an intelligent agricultural assistant for the KisanConnect platform. Today's date is ${currentDate}.
+
+PLATFORM CONTEXT:
+- KisanConnect is a comprehensive agricultural platform
+- Current Mandi Prices (₹/quintal): ${JSON.stringify(platformData.mandiPrices)}
+- Available Land for Rent: ${JSON.stringify(platformData.availableLand)}
+- Platform Tools: ${platformData.tools.map(t => `${t.name} (${t.category})`).join(', ')}
+- You can help users find land, check mandi prices, use agricultural tools, and connect farmers
+
+IMPORTANT LANGUAGE INSTRUCTION:
+${detectedLanguage === 'hindi' ? 
+  'User ने हिंदी में सवाल पूछा है। आपको जवाब ONLY हिंदी में देना है। कोई English words का उपयोग न करें। Pure Hindi में respond करें।' :
+  'User asked in English. Respond ONLY in English. Do not use any Hindi words. Keep response in pure English.'
+}
+
+User Query: ${userMessage}
+
+Provide helpful, accurate information about:
+1. Current mandi prices when asked about market rates
+2. Available land listings when asked about land rental
+3. Platform features and tools
+4. General agricultural advice
+5. Weather and crop guidance
+
+Remember: Respond in ${detectedLanguage === 'hindi' ? 'HINDI' : 'ENGLISH'} language only.`;
+
+  return basePrompt;
+}
+
+// Function to get platform-aware fallback response based on user input and language
+function getFallbackResponse(userInput, language = 'english') {
   const input = userInput.toLowerCase();
   
-  // Check each knowledge category
-  for (const [category, data] of Object.entries(agriculturalKnowledge)) {
-    if (data.keywords.some(keyword => input.includes(keyword))) {
-      const responses = data.responses;
-      return responses[Math.floor(Math.random() * responses.length)];
+  // Platform-specific responses based on query type
+  if (input.includes('mandi') || input.includes('price') || input.includes('market') || input.includes('मंडी') || input.includes('दाम')) {
+    const mandiInfo = Object.entries(platformData.mandiPrices).slice(0, 2);
+    if (language === 'hindi') {
+      return `🌾 वर्तमान मंडी भाव (₹/क्विंटल):\n${mandiInfo.map(([state, cities]) => 
+        `${state}: ${Object.entries(Object.values(cities)[0]).map(([crop, price]) => `${crop}: ₹${price}`).join(', ')}`
+      ).join('\n')}\n\nKisanConnect पर अधिक जानकारी के लिए Market सेक्शन देखें।`;
+    } else {
+      return `🌾 Current Mandi Prices (₹/quintal):\n${mandiInfo.map(([state, cities]) => 
+        `${state}: ${Object.entries(Object.values(cities)[0]).map(([crop, price]) => `${crop}: ₹${price}`).join(', ')}`
+      ).join('\n')}\n\nCheck Market section on KisanConnect for more details.`;
     }
   }
   
-  // General farming advice if no specific category matches
-  return "I'm here to help with your farming questions! Ask me about crops, soil management, pest control, weather planning, or market strategies.";
+  if (input.includes('land') || input.includes('rent') || input.includes('lease') || input.includes('जमीन') || input.includes('किराया')) {
+    if (language === 'hindi') {
+      return `🏞️ KisanConnect पर उपलब्ध जमीन:\n• मध्य प्रदेश: 245 एकड़, औसत ₹18,000/एकड़\n• महाराष्ट्र: 156 एकड़, औसत ₹22,000/एकड़\n• पंजाब: 89 एकड़, औसत ₹30,000/एकड़\n\nLand सेक्शन में जाकर जमीन देखें।`;
+    } else {
+      return `🏞️ Available Land on KisanConnect:\n• Madhya Pradesh: 245 acres, avg ₹18,000/acre\n• Maharashtra: 156 acres, avg ₹22,000/acre\n• Punjab: 89 acres, avg ₹30,000/acre\n\nVisit Land section to browse listings.`;
+    }
+  }
+  
+  if (input.includes('tool') || input.includes('feature') || input.includes('उपकरण') || input.includes('सुविधा')) {
+    if (language === 'hindi') {
+      return `🛠️ KisanConnect के उपकरण:\n• मिट्टी pH टेस्टर\n• मौसम भविष्यवाणी\n• फसल रोग पहचान\n• बाजार मूल्य ट्रैकर\n\nTools सेक्शन में जाकर इस्तेमाल करें।`;
+    } else {
+      return `🛠️ KisanConnect Tools:\n• Soil pH Tester\n• Weather Predictor\n• Crop Disease Identifier\n• Market Price Tracker\n\nVisit Tools section to access these features.`;
+    }
+  }
+  
+  // Check traditional agricultural knowledge categories
+  for (const [category, data] of Object.entries(agriculturalKnowledge)) {
+    if (data.keywords.some(keyword => input.includes(keyword))) {
+      const responses = data.responses;
+      const response = responses[Math.floor(Math.random() * responses.length)];
+      
+      if (language === 'hindi') {
+        // Provide Hindi translation for agricultural advice
+        const hindiResponses = {
+          crop: "बेहतर फसल के लिए मिट्टी की तैयारी, पर्याप्त पानी और समय पर खाद जरूरी है। फसल चक्र अपनाएं।",
+          soil: "मिट्टी का pH नियमित जांचें। अधिकतर फसलों के लिए 6.0-7.0 pH अच्छा है। कंपोस्ट डालें।",
+          pest: "कीट प्रबंधन के लिए जैविक और रासायनिक दोनों तरीके अपनाएं। नियमित निगरानी करें।",
+          weather: "मौसम पूर्वानुमान देखकर खेती की योजना बनाएं। सूखे में पानी बचाव के तरीके अपनाएं।",
+          market: "बुआई से पहले बाजार भाव जांचें। सीधे बिक्री या सहकारी समिति से जुड़ें।"
+        };
+        return hindiResponses[category] || response;
+      }
+      return response;
+    }
+  }
+  
+  // General platform introduction
+  if (language === 'hindi') {
+    return "🌾 मैं KisanConnect AI हूं! मैं आपकी खेती संबंधी मदद कर सकता हूं - मंडी भाव, जमीन किराया, कृषि उपकरण, और फसल सलाह के लिए पूछें।";
+  } else {
+    return "🌾 I'm KisanConnect AI! I can help with farming queries, mandi prices, land rental, agricultural tools, and crop advice. Ask me anything!";
+  }
 }
 
 // Socket.IO connection handling
@@ -106,49 +254,65 @@ io.on('connection', (socket) => {
 
   // Handle chat messages
   socket.on('chat-message', async (data) => {
-    const { message, timestamp } = data;
-    console.log(`💬 Message from ${socket.id}: ${message}`);
+    const { message, timestamp, isVoice, detectedLanguage, originalLanguage, confidence } = data;
+    console.log(`💬 Message from ${socket.id}: ${message} ${isVoice ? `(Voice - ${originalLanguage} → ${detectedLanguage}, ${confidence ? Math.round(confidence * 100) + '%' : 'unknown'} confidence)` : ''}`);
     
     try {
-      // Initialize Gemini model with the correct model name
+      // Use enhanced language detection for voice messages
+      let inputLanguage;
+      if (isVoice && detectedLanguage) {
+        inputLanguage = detectedLanguage;
+        console.log(`🎤 Enhanced voice detection: Original recognition=${originalLanguage}, Final language=${inputLanguage}`);
+      } else {
+        inputLanguage = detectLanguage(message);
+        console.log(`🔍 Text message language (detected): ${inputLanguage}`);
+      }
+      console.log(`🌐 Final language for response: ${inputLanguage}`);
+      
+      // Initialize Gemini model
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
-      // Enhanced prompt for agricultural context
-      const agriculturalPrompt = `You are an expert agricultural advisor for Indian farmers. 
-      Please provide practical, actionable advice for this farming question: "${message}"
-      
-      Keep your response:
-      - Concise but informative (2-3 sentences)
-      - Focused on practical solutions
-      - Relevant to Indian farming conditions
-      - Easy to understand for farmers
-      
-      Question: ${message}`;
+      // Generate platform-aware prompt with language preference
+      const platformAwarePrompt = generatePlatformAwarePrompt(message, inputLanguage);
 
       // Generate response using Gemini
-      const result = await model.generateContent(agriculturalPrompt);
+      const result = await model.generateContent(platformAwarePrompt);
       const response = await result.response;
       const botMessage = response.text();
       
-      console.log(`🤖 Bot response: ${botMessage}`);
+      console.log(`🤖 Bot response (${inputLanguage}): ${botMessage}`);
       
       // Send AI response back to client
       socket.emit('bot-message', {
         message: botMessage,
         timestamp: new Date().toISOString(),
-        source: 'ai'
+        source: 'ai',
+        language: inputLanguage
       });
       
     } catch (error) {
       console.error('❌ Gemini API Error:', error);
       
-      // Provide intelligent fallback response
-      const fallbackMessage = getFallbackResponse(message);
+      // Use the same language detection logic as above
+      let errorLanguage;
+      if (isVoice && detectedLanguage) {
+        errorLanguage = detectedLanguage;
+      } else {
+        errorLanguage = detectLanguage(message);
+      }
+      
+      // Provide intelligent fallback response in detected language
+      const fallbackMessage = getFallbackResponse(message, errorLanguage);
+      
+      const connectivityNote = errorLanguage === 'hindi' 
+        ? '💡 *नोट: मुझे वर्तमान में कनेक्टिविटी की समस्या है, लेकिन मैं अभी भी कृषि मार्गदर्शन के लिए यहाँ हूँ!*'
+        : '💡 *Note: I\'m currently experiencing connectivity issues, but I\'m still here to help with general agricultural guidance!*';
       
       socket.emit('bot-message', {
-        message: `${fallbackMessage}\n\n💡 *Note: I'm currently experiencing connectivity issues, but I'm still here to help with general agricultural guidance!*`,
+        message: `${fallbackMessage}\n\n${connectivityNote}`,
         timestamp: new Date().toISOString(),
-        source: 'fallback'
+        source: 'fallback',
+        language: errorLanguage
       });
     }
   });
@@ -292,7 +456,8 @@ This will help me provide more targeted advice!`;
       socket.emit('bot-message', {
         message: fallbackMessage,
         timestamp: new Date().toISOString(),
-        source: 'fallback'
+        source: 'fallback',
+        language: 'english' // Default to English for file analysis fallback
       });
     }
   });

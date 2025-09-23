@@ -37,6 +37,52 @@ interface Message {
   isVoice?: boolean;
 }
 
+// Enhanced language detection for voice input
+const detectVoiceLanguage = (transcript: string, recognitionLanguage: string): string => {
+  // Check for Hindi Unicode characters (direct Hindi speech)
+  const hindiPattern = /[\u0900-\u097F]/;
+  const hasHindiChars = hindiPattern.test(transcript);
+  
+  if (hasHindiChars) {
+    return 'hindi'; // Direct Hindi detected
+  }
+  
+  // If recognition used Hindi language but got English text, likely Hindi speech converted to English
+  if (recognitionLanguage === 'hi-IN') {
+    return 'hindi'; // Hindi speech recognition was used, so user spoke Hindi
+  }
+  
+  // Check for common Hindi words written in English (transliteration)
+  const hindiTransliterationPatterns = [
+    /\b(mujhe|aapka|kya|hai|mein|ke|ki|ka|se|batao|bataye|chahiye|karke|kaise|kyun|kahan|kab)\b/i,
+    /\b(gehun|chawal|kapas|soyabean|fasal|kheti|mandi|price|bhav|rates)\b/i,
+    /\b(sahayata|madad|sahayyata|jankari|jankariya)\b/i,
+    /\b(aap|hum|main|aapko|humko|hamko|humein|hamein)\b/i
+  ];
+  
+  // Check for Hindi transliteration
+  const hasHindiTransliteration = hindiTransliterationPatterns.some(pattern => pattern.test(transcript));
+  
+  if (hasHindiTransliteration) {
+    return 'hindi'; // Transliterated Hindi detected
+  }
+  
+  // Very strict English-only patterns (only these will get English response)
+  const strictEnglishPatterns = [
+    /^(what are the|show me the|tell me the|give me the|list the|provide the)\s+(current\s+)?(wheat|rice|corn|soybean|cotton)\s+(price|prices|rate|rates)/i,
+    /^(show me|tell me)\s+(available\s+)?(land|farms?|plots?)\s+(for\s+)?(farming|agriculture|rent)/i,
+    /^(hello|hi|hey),?\s+(can you help|help me|i need|please help)/i,
+    /^(what is|how can|can you)\s+.*(platform|kisanconnect|system)/i
+  ];
+  
+  // Check if it matches very strict English patterns
+  const isStrictEnglish = strictEnglishPatterns.some(pattern => pattern.test(transcript.trim()));
+  
+  // Only respond in English for very specific, clearly English patterns
+  // Default to Hindi for everything else (mixed, unclear, transliterated)
+  return isStrictEnglish && recognitionLanguage === 'en-US' ? 'english' : 'hindi';
+};
+
 const FloatingChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -255,7 +301,7 @@ const FloatingChatbot: React.FC = () => {
     }
   };
 
-  // Voice recording functions
+  // Voice recording functions with improved language detection
   const startVoiceRecording = async () => {
     if (!isVoiceSupported) {
       toast({
@@ -268,71 +314,98 @@ const FloatingChatbot: React.FC = () => {
 
     try {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
+      let recognition = new SpeechRecognition();
+      let attemptCount = 0;
+      const maxAttempts = 2;
       
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'hi-IN,en-IN,en-US'; // Support Hindi, Indian English, and US English
-      
-      recognition.onstart = () => {
-        setIsRecording(true);
-        toast({
-          title: "🎤 Recording Started",
-          description: "Speak now... (Hindi/English supported)",
-        });
-      };
-
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputMessage(transcript);
-        setIsRecording(false);
+      const tryRecognition = (language: string) => {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = language;
         
-        toast({
-          title: "🎤 Speech Recognized",
-          description: `"${transcript}"`,
-        });
-        
-        // Optionally auto-send voice messages
-        setTimeout(() => {
-          if (transcript.trim()) {
-            const voiceMessage: Message = {
-              id: Date.now().toString(),
-              content: transcript.trim(),
-              role: 'user',
-              timestamp: new Date(),
-              isVoice: true
-            };
+        recognition.onstart = () => {
+          setIsRecording(true);
+          toast({
+            title: "🎤 Recording Started",
+            description: `Speak now... (Attempt ${attemptCount + 1}/${maxAttempts})`,
+          });
+        };
 
-            setMessages(prev => [...prev, voiceMessage]);
-            setInputMessage('');
-            setIsLoading(true);
+        recognition.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          const confidence = event.results[0][0].confidence;
+          setInputMessage(transcript);
+          setIsRecording(false);
+          
+          // Enhanced language detection for voice input
+          const detectedLang = detectVoiceLanguage(transcript, language);
+          
+          console.log(`🎤 Recognition result: "${transcript}" (confidence: ${confidence}, language: ${language}, detected: ${detectedLang})`);
+          
+          toast({
+            title: `🎤 Speech Recognized (${detectedLang === 'hindi' ? 'Hindi' : 'English'})`,
+            description: `"${transcript}" (${Math.round(confidence * 100)}% confident)`,
+          });
+          
+          // Optionally auto-send voice messages
+          setTimeout(() => {
+            if (transcript.trim()) {
+              const voiceMessage: Message = {
+                id: Date.now().toString(),
+                content: transcript.trim(),
+                role: 'user',
+                timestamp: new Date(),
+                isVoice: true
+              };
 
-            // Send message to server via Socket.IO
-            if (socket && isConnected) {
-              socket.emit('chat-message', {
-                message: transcript.trim(),
-                isVoice: true,
-                timestamp: new Date().toISOString()
-              });
+              setMessages(prev => [...prev, voiceMessage]);
+              setInputMessage('');
+              setIsLoading(true);
+
+              // Send message to server via Socket.IO with enhanced language detection
+              if (socket && isConnected) {
+                socket.emit('chat-message', {
+                  message: transcript.trim(),
+                  isVoice: true,
+                  detectedLanguage: detectedLang,
+                  originalLanguage: language, // Which language recognition was used
+                  confidence: confidence,
+                  timestamp: new Date().toISOString()
+                });
+              }
             }
+          }, 500);
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error(`🎤 Speech recognition error (${language}):`, event.error);
+          attemptCount++;
+          
+          if (attemptCount < maxAttempts && language === 'en-US') {
+            // Try Hindi if English failed
+            console.log('🔄 Retrying with Hindi...');
+            setTimeout(() => tryRecognition('hi-IN'), 500);
+          } else {
+            setIsRecording(false);
+            toast({
+              title: "Speech Recognition Error",
+              description: `Could not recognize speech. Please try again or type your message.`,
+              variant: "destructive"
+            });
           }
-        }, 500);
+        };
+
+        recognition.onend = () => {
+          setIsRecording(false);
+        };
+
+        recognition.start();
       };
 
-      recognition.onerror = (event: any) => {
-        setIsRecording(false);
-        toast({
-          title: "Speech Recognition Error",
-          description: `Error: ${event.error}`,
-          variant: "destructive"
-        });
-      };
-
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognition.start();
+      // Start with English first
+      tryRecognition('en-US');
+      
     } catch (error) {
       setIsRecording(false);
       toast({
