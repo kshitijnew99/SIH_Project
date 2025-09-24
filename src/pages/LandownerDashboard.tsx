@@ -18,6 +18,7 @@ import {
   BarChart3,
   TrendingUp,
   MapPin,
+  Award,
   Home,
   Sprout,
   CheckCircle,

@@ -21,6 +21,7 @@ const Navbar = () => {
     { name: "Find Land", path: "/land" },
     { name: "Market Prices", path: "/market" },
     { name: "Rent Tools", path: "/tools" },
+    { name: "Gov Schemes", path: "/schemes" },
     { name: "About", path: "/about" },
   ];
 

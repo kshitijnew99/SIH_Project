@@ -18,6 +18,7 @@ import ViewAnalytics from "./pages/ViewAnalytics";
 import UpdateProfile from "./pages/UpdateProfile";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
+import SchemesPage from "./pages/SchemesPage";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/landowner/view-analytics" element={<ViewAnalytics />} />
           <Route path="/landowner/update-profile" element={<UpdateProfile />} />
           <Route path="/about" element={<About />} />
+          <Route path="/schemes" element={<SchemesPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
