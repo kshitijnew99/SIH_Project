@@ -14,6 +14,7 @@ import {
   Sprout
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import GovernmentSchemes from "@/components/GovernmentSchemes";
 
 const FarmerDashboard = () => {
   // Get user data from localStorage

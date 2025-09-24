@@ -432,8 +432,9 @@ const Market = () => {
     ? currentData 
     : currentData.filter(item => item.state === selectedState);
 
-  const bestPrice = Math.max(...filteredData.map(item => item.price));
-  const avgPrice = Math.round(filteredData.reduce((sum, item) => sum + item.price, 0) / filteredData.length);
+  // Handle edge case when no data is available
+  const bestPrice = filteredData.length > 0 ? Math.max(...filteredData.map(item => item.price)) : 0;
+  const avgPrice = filteredData.length > 0 ? Math.round(filteredData.reduce((sum, item) => sum + item.price, 0) / filteredData.length) : 0;
 
   return (
     <>
@@ -479,7 +480,7 @@ const Market = () => {
               <CardContent>
                 <Select value={selectedState} onValueChange={setSelectedState}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select State" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All States</SelectItem>
@@ -529,6 +530,57 @@ const Market = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Filter Status */}
+          <Card className="bg-blue-50/50 border-blue-200">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-4">
+                  <span className="font-medium">Active Filters:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md">
+                      Crop: {crops.find(c => c.value === selectedCrop)?.label || selectedCrop}
+                    </span>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded-md">
+                      State: {selectedState === "all" ? "All States" : selectedState}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="font-medium text-primary">
+                    Showing {filteredData.length} results
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedCrop("wheat");
+                      setSelectedState("all");
+                    }}
+                  >
+                    Reset Filters
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Debug Info - Will remove after verification */}
+              {filteredData.length > 0 && selectedState !== "all" && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-xs">
+                  <div className="font-medium mb-2">Price Analysis for {selectedState}:</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="font-medium">Prices: </span>
+                      {filteredData.map(item => `${item.mandi}: ₹${item.price}`).join(", ")}
+                    </div>
+                    <div>
+                      <span className="font-medium">Calculated:</span>
+                      <br />Best: ₹{bestPrice} | Avg: ₹{avgPrice}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Market Price Table */}
           <Card>
