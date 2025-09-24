@@ -21,25 +21,46 @@ const AuthForm = () => {
       const formData = new FormData(e.currentTarget);
       const email = formData.get('email')?.toString() || '';
       const password = formData.get('password')?.toString() || '';
-      const name = email.split('@')[0]; // Using email name as display name for login
 
-      // In a real app, you would validate credentials against a backend
-      // For now, we'll simulate a successful login
+      // Check if user is registered (simulate database check)
+      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const existingUser = registeredUsers.find((user: any) => user.email === email && user.password === password);
+      
+      if (!existingUser) {
+        // User not found or wrong credentials
+        alert('Invalid credentials or user not registered. Please register first.');
+        return;
+      }
+
+      // User found, proceed with login
       const userData = {
-        name,
-        email,
-        role: 'landowner', // Will be set in role selection
+        name: existingUser.name,
+        fullName: existingUser.fullName,
+        email: existingUser.email,
+        role: existingUser.role || 'landowner',
+        permanentRole: existingUser.permanentRole,
+        roleAssignedAt: existingUser.roleAssignedAt,
         isAuthenticated: true
       };
 
       // Store user data in localStorage
       localStorage.setItem('userData', JSON.stringify(userData));
 
-      // Navigate to role selection
-      navigate('/role-selection');
+      // Navigate based on whether user has permanent role
+      if (userData.permanentRole) {
+        // User has permanent role, go directly to dashboard
+        if (userData.permanentRole === 'farmer') {
+          navigate('/farmer-dashboard');
+        } else {
+          navigate('/landowner-dashboard');
+        }
+      } else {
+        // First time login, need to select role
+        navigate('/role-selection');
+      }
     } catch (error) {
       console.error('Login failed:', error);
-      // You can show an error toast here
+      alert('Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -57,10 +78,32 @@ const AuthForm = () => {
       const email = formData.get('registerEmail')?.toString() || '';
       const password = formData.get('registerPassword')?.toString() || '';
 
-      // Store user data in localStorage
+      // Check if user already exists
+      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const existingUser = registeredUsers.find((user: any) => user.email === email);
+      
+      if (existingUser) {
+        alert('User with this email already exists. Please login instead.');
+        return;
+      }
+
+      // Create new user data
+      const newUser = {
+        name: firstName,
+        fullName,
+        email,
+        password, // In production, this should be hashed!
+        registeredAt: new Date().toISOString()
+      };
+
+      // Add to registered users database
+      registeredUsers.push(newUser);
+      localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+
+      // Set current user data for session
       const userData = {
-        name: firstName, // Store just the first name
-        fullName, // Store full name as well in case needed
+        name: firstName,
+        fullName,
         email,
         role: 'landowner', // Will be set in role selection
         isAuthenticated: true
@@ -70,7 +113,7 @@ const AuthForm = () => {
       navigate("/role-selection");
     } catch (error) {
       console.error('Registration failed:', error);
-      // You can show an error toast here
+      alert('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

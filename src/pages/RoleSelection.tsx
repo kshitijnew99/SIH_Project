@@ -2,17 +2,59 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sprout, Home } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const RoleSelection = () => {
   const navigate = useNavigate();
+  
+  // Check if user already has a permanent role on component mount
+  useEffect(() => {
+    const userDataString = localStorage.getItem('userData');
+    if (userDataString) {
+      const userData = JSON.parse(userDataString);
+      if (userData.permanentRole) {
+        // User already has a permanent role, redirect immediately
+        if (userData.permanentRole === 'farmer') {
+          navigate('/farmer-dashboard');
+        } else {
+          navigate('/landowner-dashboard');
+        }
+      }
+    }
+  }, [navigate]);
 
   const handleRoleSelection = (role: 'farmer' | 'landowner') => {
     // Get existing user data
     const userDataString = localStorage.getItem('userData');
     if (userDataString) {
       const userData = JSON.parse(userDataString);
-      // Update the role
+      
+      // Check if user already has a permanent role assigned
+      if (userData.permanentRole) {
+        // User already has a permanent role, redirect to their dashboard
+        if (userData.permanentRole === 'farmer') {
+          navigate('/farmer-dashboard');
+        } else {
+          navigate('/landowner-dashboard');
+        }
+        return;
+      }
+      
+      // First time role selection - make it permanent
       userData.role = role;
+      userData.permanentRole = role; // Set permanent role that cannot be changed
+      userData.roleAssignedAt = new Date().toISOString(); // Track when role was assigned
+      
+      // Also update the registered users database
+      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const userIndex = registeredUsers.findIndex((user: any) => user.email === userData.email);
+      if (userIndex !== -1) {
+        registeredUsers[userIndex].role = role;
+        registeredUsers[userIndex].permanentRole = role;
+        registeredUsers[userIndex].roleAssignedAt = userData.roleAssignedAt;
+        localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+      }
+      
       // Save back to localStorage
       localStorage.setItem('userData', JSON.stringify(userData));
       
