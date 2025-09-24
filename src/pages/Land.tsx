@@ -895,7 +895,7 @@ const Land = () => {
   // Default/sample land listings data
   const defaultListings = [
     {
-      id: 1,
+      id: 9001, // Using high IDs to avoid conflicts with user-added lands
       title: "5 Acres Agricultural Land",
       location: "Nashik, Maharashtra",
       district: "Nashik",
@@ -909,9 +909,10 @@ const Land = () => {
       image: "/api/placeholder/400/300",
       area: "5 acres",
       suitable: "Cotton, Soybean, Wheat",
+      status: "available",
     },
     {
-      id: 2,
+      id: 9002,
       title: "10 Acres Fertile Land",
       location: "Sangli, Maharashtra",
       district: "Sangli",
@@ -925,62 +926,75 @@ const Land = () => {
       image: "/api/placeholder/400/300",
       area: "10 acres",
       suitable: "Sugarcane, Turmeric",
+      status: "available",
     },
     {
-      id: 3,
+      id: 9003,
       title: "3 Acres with Irrigation",
       location: "Pune, Maharashtra",
       district: "Pune",
       state: "Maharashtra",
+      priceModel: "fixed",
       price: "₹25,000/acre/year",
+      sharingModel: null,
       water: "Drip irrigation installed",
       electricity: "Available",
       soil: "Red soil",
       image: "/api/placeholder/400/300",
       area: "3 acres",
       suitable: "Vegetables, Flowers",
+      status: "available",
     },
     {
-      id: 4,
+      id: 9004,
       title: "7 Acres Prime Agricultural Land",
       location: "Amritsar, Punjab",
       district: "Amritsar",
       state: "Punjab",
+      priceModel: "fixed",
       price: "₹30,000/acre/year",
+      sharingModel: null,
       water: "Canal + Tube well",
       electricity: "Available 24/7",
       soil: "Loamy soil",
       image: "/api/placeholder/400/300",
       area: "7 acres",
       suitable: "Wheat, Rice, Vegetables",
+      status: "available",
     },
     {
-      id: 5,
+      id: 9005,
       title: "15 Acres Farm Land",
       location: "Indore, Madhya Pradesh",
       district: "Indore",
       state: "Madhya Pradesh",
+      priceModel: "fixed",
       price: "₹18,000/acre/year",
+      sharingModel: null,
       water: "Bore well",
       electricity: "Available",
       soil: "Black soil",
       image: "/api/placeholder/400/300",
       area: "15 acres",
       suitable: "Soybean, Wheat, Gram",
+      status: "available",
     },
     {
-      id: 6,
+      id: 9006,
       title: "4 Acres Organic Farm",
       location: "Coimbatore, Tamil Nadu",
       district: "Coimbatore",
       state: "Tamil Nadu",
+      priceModel: "fixed",
       price: "₹22,000/acre/year",
+      sharingModel: null,
       water: "Well + Rainwater harvesting",
       electricity: "Solar powered",
       soil: "Red loamy soil",
       image: "/api/placeholder/400/300",
       area: "4 acres",
       suitable: "Coconut, Banana, Vegetables",
+      status: "available",
     },
   ];
 
@@ -992,6 +1006,9 @@ const Land = () => {
   }, []);
 
   const filteredListings = landListings.filter((land) => {
+    // Only show available lands (not unlisted or rented)
+    if (land.status !== 'available') return false;
+    
     // Filter by state
     if (filterState !== "all" && land.state !== filterState) return false;
     

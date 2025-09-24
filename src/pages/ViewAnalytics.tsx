@@ -15,7 +15,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, TrendingUp, User } from "lucide-react";
 
-const COLORS = ['#0ea5e9', '#22d3ee', '#0ea5e9', '#38bdf8'];
+const COLORS = ['#22c55e', '#0ea5e9', '#6b7280', '#38bdf8']; // Green for available, Blue for rented, Gray for unlisted
 const CHART_COLORS = {
   primary: '#0ea5e9',
   secondary: '#22d3ee',
@@ -67,7 +67,7 @@ const ViewAnalytics = () => {
 
   // Calculate analytics data
   const totalLands = landListings.length;
-  const totalArea = landListings.reduce((sum, land) => sum + parseFloat(land.landSize || 0), 0);
+  const totalArea = landListings.reduce((sum, land) => sum + parseFloat(land.area || 0), 0);
   const averageFertility = landListings.reduce((sum, land) => sum + parseFloat(land.fertilityIndex || 0), 0) / totalLands || 0;
 
   // Prepare chart data
@@ -84,6 +84,10 @@ const ViewAnalytics = () => {
     { 
       name: "Available", 
       value: landListings.filter(land => land.status === 'available').length 
+    },
+    { 
+      name: "Unlisted", 
+      value: landListings.filter(land => land.status === 'unlisted').length 
     }
   ];
 
@@ -91,7 +95,7 @@ const ViewAnalytics = () => {
   const calculateMonthlyEarnings = () => {
     return landListings.reduce((total, land) => {
       if (land.status === 'rented') {
-        return total + (parseFloat(land.rentalPrice) * parseFloat(land.landSize));
+        return total + (parseFloat(land.rentalPrice) * parseFloat(land.area || 0));
       }
       return total;
     }, 0);
@@ -425,14 +429,22 @@ const ViewAnalytics = () => {
                       <h4 className="font-semibold">{land.title}</h4>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <MapPin className="h-4 w-4 mr-1" />
-                        <span>{land.landSize} Acres</span>
+                        <span>{land.area} Acres</span>
                       </div>
                     </div>
                     <Badge
-                      variant={land.status === 'available' ? 'secondary' : 'default'}
-                      className={land.status === 'available' ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}
+                      variant={
+                        land.status === 'available' ? 'secondary' : 
+                        land.status === 'unlisted' ? 'outline' : 'default'
+                      }
+                      className={
+                        land.status === 'available' ? 'bg-green-50 text-green-700' :
+                        land.status === 'unlisted' ? 'bg-gray-50 text-gray-700' :
+                        'bg-blue-50 text-blue-700'
+                      }
                     >
-                      {land.status === 'available' ? 'Available' : 'Rented'}
+                      {land.status === 'available' ? 'Available' : 
+                       land.status === 'unlisted' ? 'Unlisted' : 'Rented'}
                     </Badge>
                   </div>
                 ))}

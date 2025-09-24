@@ -44,7 +44,7 @@ const formSchema = z.object({
   longitude: z.number().optional(),
   certification: z.string().optional(),
   season: z.string().optional(),
-  status: z.enum(['available', 'rented']).default('available'),
+  status: z.enum(['available', 'rented', 'unlisted']).default('available'),
 });
 
 const AddNewLand = () => {

@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/components/ui/use-toast";
 import {
   User,
   Shield,
@@ -21,10 +22,16 @@ import {
   Sprout,
   CheckCircle,
   AlertCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 const LandownerDashboard = () => {
+  const { toast } = useToast();
+  const [refreshKey, setRefreshKey] = useState(0);
+
   // Get user data from localStorage
   const getUserData = () => {
     try {
@@ -48,6 +55,35 @@ const LandownerDashboard = () => {
       console.error('Error reading land listings:', error);
     }
     return [];
+  };
+
+  // Toggle land listing status
+  const toggleLandStatus = (landId: number) => {
+    try {
+      const listings = getLandListings();
+      const updatedListings = listings.map((land: any) => {
+        if (land.id === landId) {
+          const newStatus = land.status === 'available' ? 'unlisted' : 'available';
+          return { ...land, status: newStatus };
+        }
+        return land;
+      });
+      
+      localStorage.setItem('landListings', JSON.stringify(updatedListings));
+      setRefreshKey(prev => prev + 1); // Force re-render
+      
+      const updatedLand = updatedListings.find((land: any) => land.id === landId);
+      toast({
+        title: "Success!",
+        description: `Land listing ${updatedLand.status === 'available' ? 'made available' : 'unlisted'} successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update land status. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const userData = getUserData();
@@ -121,9 +157,15 @@ const LandownerDashboard = () => {
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
+                      <span className="text-sm">Unlisted</span>
+                      <Badge variant="outline">
+                        {landListings.filter(land => land.status === 'unlisted').length}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
                       <span className="text-sm">Total Area</span>
                       <Badge variant="outline">
-                        {landListings.reduce((total, land) => total + parseFloat(land.landSize), 0)} acres
+                        {landListings.reduce((total, land) => total + parseFloat(land.area || 0), 0)} acres
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
@@ -296,7 +338,7 @@ const LandownerDashboard = () => {
                             <div className="grid md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                               <div className="flex items-center space-x-2">
                                 <MapPin className="h-4 w-4" />
-                                <span>{land.landSize} Acres, {land.location}</span>
+                                <span>{land.area} Acres, {land.location}</span>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <TrendingUp className="h-4 w-4" />
@@ -304,8 +346,19 @@ const LandownerDashboard = () => {
                               </div>
                             </div>
                             <div className="flex items-center space-x-4 mt-3">
-                              <Badge variant={land.status === 'available' ? 'secondary' : 'default'}>
-                                {land.status === 'available' ? 'Available' : 'Currently Rented'}
+                              <Badge 
+                                variant={
+                                  land.status === 'available' ? 'secondary' : 
+                                  land.status === 'unlisted' ? 'outline' : 'default'
+                                }
+                                className={
+                                  land.status === 'available' ? 'bg-green-50 text-green-700' :
+                                  land.status === 'unlisted' ? 'bg-gray-50 text-gray-700' :
+                                  'bg-blue-50 text-blue-700'
+                                }
+                              >
+                                {land.status === 'available' ? 'Available for Lease' : 
+                                 land.status === 'unlisted' ? 'Unlisted' : 'Currently Rented'}
                               </Badge>
                               {land.certification && (
                                 <Badge variant="outline">{land.certification}</Badge>
@@ -315,9 +368,29 @@ const LandownerDashboard = () => {
                               )}
                             </div>
                           </div>
-                          <Button variant="outline" size="sm">
-                            Manage
-                          </Button>
+                          <div className="flex flex-col space-y-2">
+                            <Button variant="outline" size="sm">
+                              Manage
+                            </Button>
+                            <Button
+                              variant={land.status === 'available' ? 'destructive' : 'default'}
+                              size="sm"
+                              onClick={() => toggleLandStatus(land.id)}
+                              className="flex items-center space-x-2"
+                            >
+                              {land.status === 'available' ? (
+                                <>
+                                  <EyeOff className="h-4 w-4" />
+                                  <span>Unlist Land</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Eye className="h-4 w-4" />
+                                  <span>List for Lease</span>
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
