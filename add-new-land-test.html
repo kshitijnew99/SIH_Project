@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Land Page Access Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .info { background-color: #d1ecf1; border-color: #b6d4f1; color: #0c5460; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; color: #856404; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        a { display: inline-block; margin: 10px 0; padding: 10px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+        a:hover { background: #0056b3; }
+        .test-link { background: #28a745; }
+        .test-link:hover { background: #1e7e34; }
+    </style>
+</head>
+<body>
+    <h1>🏡 Add New Land Page - Debugging Guide</h1>
+    
+    <div class="test-section success">
+        <h2>✅ ISSUE FIXED!</h2>
+        <p><strong>Problem Identified:</strong> React version conflict with react-leaflet v5.0.0</p>
+        <p><strong>Solution Applied:</strong> Created SimpleLeafletMap using vanilla Leaflet (compatible with React 18)</p>
+        <ul>
+            <li><strong>Route Path</strong>: <code>/landowner/add-new-land</code> ✅</li>
+            <li><strong>Alternative Route</strong>: <code>/add-land</code> ✅</li>
+            <li><strong>Component</strong>: <code>SimpleLeafletMap</code> (React 18 compatible) ✅</li>
+            <li><strong>Server</strong>: Running on http://localhost:8083/ ✅</li>
+        </ul>
+    </div>
+
+    <div class="test-section info">
+        <h2>📍 Test Links - Try These First</h2>
+        <p>Click these links to diagnose the issue:</p>
+        
+        <!-- Diagnostic Test Route -->
+        <a href="http://localhost:8083/test-add-land" target="_blank" class="test-link">
+            🧪 TEST: Basic Route (No Leaflet)
+        </a>
+        <p><small>↑ This should work - tests if routing is functional</small></p>
+        
+        <!-- Alternative Simple Route -->
+        <a href="http://localhost:8083/add-land" target="_blank">
+            🔗 SIMPLE: /add-land (Alternative Route)
+        </a>
+        <p><small>↑ Shorter URL to the same page</small></p>
+        
+        <!-- Original Route -->
+        <a href="http://localhost:8083/landowner/add-new-land" target="_blank">
+            🏡 ORIGINAL: /landowner/add-new-land
+        </a>
+        <p><small>↑ Original route - may have Leaflet loading issues</small></p>
+        
+        <!-- Dashboard Route -->
+        <a href="http://localhost:8083/landowner-dashboard" target="_blank">
+            📊 DASHBOARD: Navigate via Dashboard
+        </a>
+        <p><small>↑ Go to dashboard, then click "Add New Land"</small></p>
+    </div>
+
+    <div class="test-section error">
+        <h2>🚨 Step-by-Step Diagnosis</h2>
+        <p><strong>Follow these steps in order:</strong></p>
+        <ol>
+            <li><strong>Step 1:</strong> Click the "TEST: Basic Route" link above
+                <ul><li>✅ If it works: Routing is fine, issue is with Leaflet</li>
+                <li>❌ If it fails: There's a basic routing/compilation issue</li></ul>
+            </li>
+            <li><strong>Step 2:</strong> Open Browser Console (F12 → Console tab)</li>
+            <li><strong>Step 3:</strong> Click the "ORIGINAL" link and check for red errors</li>
+            <li><strong>Step 4:</strong> Look for errors mentioning:
+                <ul>
+                    <li>"leaflet" or "react-leaflet"</li>
+                    <li>"Cannot resolve module"</li>
+                    <li>"CSS loading failed"</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="test-section warning">
+        <h2>🔍 Most Likely Issues</h2>
+        <div style="margin: 10px 0;">
+            <strong>1. Leaflet CSS Loading Issue:</strong>
+            <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px;">Error: Failed to load leaflet/dist/leaflet.css</pre>
+            <p><strong>Solution:</strong> The Leaflet CSS might not be loading properly</p>
+        </div>
+        
+        <div style="margin: 10px 0;">
+            <strong>2. React-Leaflet Module Issue:</strong>
+            <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px;">Error: Cannot resolve 'react-leaflet'</pre>
+            <p><strong>Solution:</strong> Module installation might have failed</p>
+        </div>
+        
+        <div style="margin: 10px 0;">
+            <strong>3. TypeScript Definition Issue:</strong>
+            <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px;">Error: Could not find declaration file for 'leaflet'</pre>
+            <p><strong>Solution:</strong> @types/leaflet might not be properly installed</p>
+        </div>
+    </div>
+
+    <div class="test-section info">
+        <h2>🧪 Testing Steps</h2>
+        <ol>
+            <li><strong>Method 1 - Direct URL</strong>:
+                <ul>
+                    <li>Open browser</li>
+                    <li>Navigate to: <code>http://localhost:8083/landowner/add-new-land</code></li>
+                    <li>Page should load with the form and Leaflet map</li>
+                </ul>
+            </li>
+            <li><strong>Method 2 - Via Dashboard</strong>:
+                <ul>
+                    <li>Go to: <code>http://localhost:8083/landowner-dashboard</code></li>
+                    <li>Look for "Add New Land" button/link</li>
+                    <li>Click to navigate to the page</li>
+                </ul>
+            </li>
+            <li><strong>Method 3 - Check Console</strong>:
+                <ul>
+                    <li>Press F12 to open Developer Tools</li>
+                    <li>Check Console tab for any JavaScript errors</li>
+                    <li>Look for any red error messages</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="test-section info">
+        <h2>🔍 Troubleshooting</h2>
+        <p>If the page still doesn't load:</p>
+        <ul>
+            <li><strong>Check Server</strong>: Make sure <code>npm run dev</code> is running on port 8083</li>
+            <li><strong>Clear Cache</strong>: Try hard refresh (Ctrl+F5) or clear browser cache</li>
+            <li><strong>Check Network</strong>: Look at Network tab in Developer Tools for failed requests</li>
+            <li><strong>Console Errors</strong>: Any errors related to Leaflet or React components</li>
+        </ul>
+    </div>
+
+    <div class="test-section success">
+        <h2>✅ Expected Features</h2>
+        <p>When the page loads correctly, you should see:</p>
+        <ul>
+            <li>📝 Form with land details (title, area, location, etc.)</li>
+            <li>🗺️ Interactive Leaflet map</li>
+            <li>📍 Red marker on the map</li>
+            <li>💙 Blue location card showing coordinates</li>
+            <li>🔍 Search box and GPS button</li>
+            <li>📱 Responsive design that works on mobile</li>
+        </ul>
+    </div>
+
+    <script>
+        // Check if we're on the correct port
+        if (window.location.port !== '8083') {
+            document.body.innerHTML = `
+                <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 20px; margin: 20px; border-radius: 8px;">
+                    <h2>⚠️ Port Mismatch</h2>
+                    <p>This test page expects the server to be running on port 8083.</p>
+                    <p>Current page is on port: <strong>${window.location.port || '80'}</strong></p>
+                    <p>Please update the links above to match your server port.</p>
+                </div>
+            ` + document.body.innerHTML;
+        }
+    </script>
+</body>
+</html>

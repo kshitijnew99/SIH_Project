@@ -19,6 +19,8 @@ import UpdateProfile from "./pages/UpdateProfile";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
 import SchemesPage from "./pages/SchemesPage";
+import ContactSupport from "./pages/ContactSupport";
+import AddNewLandTest from "./pages/AddNewLandTest";
 
 const queryClient = new QueryClient();
 
@@ -38,10 +40,13 @@ const App = () => (
           <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
           <Route path="/landowner-dashboard" element={<LandownerDashboard />} />
           <Route path="/landowner/add-new-land" element={<AddNewLand />} />
+          <Route path="/add-land" element={<AddNewLand />} />
           <Route path="/landowner/view-analytics" element={<ViewAnalytics />} />
           <Route path="/landowner/update-profile" element={<UpdateProfile />} />
           <Route path="/about" element={<About />} />
           <Route path="/schemes" element={<SchemesPage />} />
+          <Route path="/contact-support" element={<ContactSupport />} />
+          <Route path="/test-add-land" element={<AddNewLandTest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -10,7 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import RapidAPIMap from "@/components/RapidAPIMap";
+import SimpleLeafletMap from "@/components/SimpleLeafletMap";
 
 // Indian states list
 const indianStates = [
@@ -360,7 +360,7 @@ const AddNewLand = () => {
               {/* Map Location Picker */}
               <div className="space-y-2">
                 <Label>Precise Location (Search or use GPS)</Label>
-                <RapidAPIMap
+                <SimpleLeafletMap
                   center={mapLocation}
                   onLocationSelect={(location) => {
                     setMapLocation(location);
@@ -368,6 +368,8 @@ const AddNewLand = () => {
                     form.setValue("longitude", location.lng);
                   }}
                   height="400px"
+                  zoom={13}
+                  showLocationCard={true}
                 />
               </div>
 

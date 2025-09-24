@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Map Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .info { background-color: #d1ecf1; border-color: #b6d4f1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🗺️ Leaflet Map Integration Test</h1>
+    
+    <div class="test-section success">
+        <h2>✅ Installation Complete</h2>
+        <ul>
+            <li>Leaflet packages installed: <code>leaflet</code>, <code>react-leaflet</code>, <code>@types/leaflet</code></li>
+            <li>LeafletMap component created with all features</li>
+            <li>AddNewLand page updated to use LeafletMap</li>
+            <li>CSS styles added for better appearance</li>
+        </ul>
+    </div>
+
+    <div class="test-section info">
+        <h2>🚀 Features Implemented</h2>
+        <ul>
+            <li><strong>Interactive Map</strong>: Click anywhere to select location</li>
+            <li><strong>GPS Location</strong>: "Use GPS" button to get current location</li>
+            <li><strong>Search Function</strong>: Search for locations by name</li>
+            <li><strong>Custom Red Marker</strong>: Matches your image design</li>
+            <li><strong>Location Card</strong>: Shows selected coordinates in a blue card</li>
+            <li><strong>Form Integration</strong>: Updates latitude/longitude form fields</li>
+            <li><strong>Toast Notifications</strong>: User feedback for actions</li>
+            <li><strong>Loading States</strong>: Visual feedback during operations</li>
+            <li><strong>Responsive Design</strong>: Works on all screen sizes</li>
+        </ul>
+    </div>
+
+    <div class="test-section info">
+        <h2>🧪 Testing Instructions</h2>
+        <ol>
+            <li>Navigate to: <a href="http://localhost:8082/landowner/add-new-land" target="_blank">Add New Land Page</a></li>
+            <li>Scroll down to the "Precise Location" section</li>
+            <li>Test the following features:
+                <ul>
+                    <li>Click on the map to select a location</li>
+                    <li>Use the "Use GPS" button to get your current location</li>
+                    <li>Search for a location (e.g., "Mumbai", "Delhi")</li>
+                    <li>Verify the coordinates appear in the blue card</li>
+                    <li>Check that form fields are updated</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="test-section info">
+        <h2>📍 Map Features Match Your Image</h2>
+        <ul>
+            <li><strong>Red Marker</strong>: ✅ Custom red pin marker</li>
+            <li><strong>Coordinates Display</strong>: ✅ Shows lat/lng in format "28.613900, 77.209000"</li>
+            <li><strong>Selected Location Card</strong>: ✅ Blue card with location info</li>
+            <li><strong>Connected Status</strong>: ✅ Shows "Map Connected" with checkmark</li>
+            <li><strong>Interactive Controls</strong>: ✅ Search and GPS buttons</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Technical Details</h2>
+        <ul>
+            <li><strong>Map Provider</strong>: OpenStreetMap (free, no API key required)</li>
+            <li><strong>Geocoding</strong>: Nominatim service for location search</li>
+            <li><strong>Default Location</strong>: Delhi (28.6139, 77.2090)</li>
+            <li><strong>Zoom Level</strong>: 13 (optimal for land selection)</li>
+            <li><strong>Map Size</strong>: 400px height, responsive width</li>
+        </ul>
+    </div>
+</body>
+</html>
