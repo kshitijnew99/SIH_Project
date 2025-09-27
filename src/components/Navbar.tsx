@@ -50,7 +50,7 @@ const Navbar = () => {
             {userData ? (
               <ProfileMenu userData={userData} />
             ) : (
-              <Link to="/auth">
+              <Link to="/role-selection">
                 <Button variant="hero" size="sm">
                   Register / Login
                 </Button>
@@ -86,7 +86,7 @@ const Navbar = () => {
               </div>
             ) : (
               <Link
-                to="/auth"
+                to="/role-selection"
                 className="block px-3 py-2"
                 onClick={() => setIsOpen(false)}
               >

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sprout, Home } from "lucide-react";
+import { Sprout, Home, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -16,15 +16,17 @@ const RoleSelection = () => {
         // User already has a permanent role, redirect immediately
         if (userData.permanentRole === 'farmer') {
           navigate('/farmer-dashboard');
-        } else {
+        } else if (userData.permanentRole === 'landowner') {
           navigate('/landowner-dashboard');
+        } else if (userData.permanentRole === 'admin') {
+          navigate('/admin-dashboard');
         }
       }
     }
   }, [navigate]);
 
-  const handleRoleSelection = (role: 'farmer' | 'landowner') => {
-    // Get existing user data
+  const handleRoleSelection = (role: 'farmer' | 'landowner' | 'admin') => {
+    // Check if user is already logged in
     const userDataString = localStorage.getItem('userData');
     if (userDataString) {
       const userData = JSON.parse(userDataString);
@@ -34,18 +36,20 @@ const RoleSelection = () => {
         // User already has a permanent role, redirect to their dashboard
         if (userData.permanentRole === 'farmer') {
           navigate('/farmer-dashboard');
-        } else {
+        } else if (userData.permanentRole === 'landowner') {
           navigate('/landowner-dashboard');
+        } else if (userData.permanentRole === 'admin') {
+          navigate('/admin-dashboard');
         }
         return;
       }
       
-      // First time role selection - make it permanent
+      // User is logged in but no permanent role - assign role and redirect to dashboard
       userData.role = role;
-      userData.permanentRole = role; // Set permanent role that cannot be changed
-      userData.roleAssignedAt = new Date().toISOString(); // Track when role was assigned
+      userData.permanentRole = role;
+      userData.roleAssignedAt = new Date().toISOString();
       
-      // Also update the registered users database
+      // Update registered users database
       const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
       const userIndex = registeredUsers.findIndex((user: any) => user.email === userData.email);
       if (userIndex !== -1) {
@@ -55,15 +59,20 @@ const RoleSelection = () => {
         localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
       }
       
-      // Save back to localStorage
       localStorage.setItem('userData', JSON.stringify(userData));
       
-      // Navigate to the appropriate dashboard
+      // Navigate to appropriate dashboard
       if (role === 'farmer') {
         navigate('/farmer-dashboard');
-      } else {
+      } else if (role === 'landowner') {
         navigate('/landowner-dashboard');
+      } else if (role === 'admin') {
+        navigate('/admin-dashboard');
       }
+    } else {
+      // User is not logged in - store selected role and redirect to auth
+      localStorage.setItem('selectedRole', role);
+      navigate(`/auth?role=${role}`);
     }
   };
 
@@ -99,21 +108,27 @@ const RoleSelection = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {/* Farmer Card */}
-            <Card className="hover:shadow-xl transition-shadow duration-300 cursor-pointer group">
+            <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer group border-2 hover:border-primary/30 bg-gradient-to-br from-card to-secondary/10">
               <CardHeader className="text-center pb-4">
-                <div className="w-20 h-20 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <Sprout className="h-10 w-10 text-primary" />
+                <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <Sprout className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">I'm a Farmer</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-xl font-semibold text-foreground">I'm a Farmer</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground mt-2">
                   Find land, access market prices, and rent farming tools
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-center pb-6">
+              <CardContent className="px-6 pb-4">
+                <ul className="text-sm text-muted-foreground space-y-1 mb-6">
+                  <li>• Access available agricultural land</li>
+                  <li>• Get real-time market prices</li>
+                  <li>• Rent affordable farming tools</li>
+                  <li>• Track your farming progress</li>
+                </ul>
                 <Button 
-                  size="lg"
+                  className="w-full bg-primary hover:bg-primary-hover text-primary-foreground"
                   onClick={() => handleRoleSelection('farmer')}
                 >
                   Continue as Farmer
@@ -121,26 +136,66 @@ const RoleSelection = () => {
               </CardContent>
             </Card>
 
-            {/* Land Owner Card */}
-            <Card className="hover:shadow-xl transition-shadow duration-300 cursor-pointer group">
+            {/* Landowner Card */}
+            <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer group border-2 hover:border-primary/30 bg-gradient-to-br from-card to-secondary/10">
               <CardHeader className="text-center pb-4">
-                <div className="w-20 h-20 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <Sprout className="h-10 w-10 text-primary transform rotate-180" />
+                <div className="w-16 h-16 mx-auto mb-4 bg-secondary/50 rounded-full flex items-center justify-center group-hover:bg-secondary/70 transition-colors">
+                  <Home className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">I'm a Land Owner</CardTitle>
-                <CardDescription className="text-base">
-                  List your land and manage your agricultural properties
+                <CardTitle className="text-xl font-semibold text-foreground">I'm a Landowner</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground mt-2">
+                  List your land and earn extra income from unused property
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-center pb-6">
+              <CardContent className="px-6 pb-4">
+                <ul className="text-sm text-muted-foreground space-y-1 mb-6">
+                  <li>• List your agricultural land</li>
+                  <li>• Earn rental income</li>
+                  <li>• Connect with verified farmers</li>
+                  <li>• Monitor land performance</li>
+                </ul>
                 <Button 
-                  size="lg"
+                  className="w-full bg-primary hover:bg-primary-hover text-primary-foreground"
                   onClick={() => handleRoleSelection('landowner')}
                 >
-                  Continue as Land Owner
+                  Continue as Landowner
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Admin Card */}
+            <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer group border-2 hover:border-primary/30 bg-gradient-to-br from-card to-secondary/10">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 mx-auto mb-4 bg-accent/20 rounded-full flex items-center justify-center group-hover:bg-accent/30 transition-colors">
+                  <Shield className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-xl font-semibold text-foreground">I'm an Admin</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground mt-2">
+                  Government officer with administrative privileges
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="px-6 pb-4">
+                <ul className="text-sm text-muted-foreground space-y-1 mb-6">
+                  <li>• Monitor platform activities</li>
+                  <li>• Manage user accounts</li>
+                  <li>• Oversee land transactions</li>
+                  <li>• Generate system reports</li>
+                </ul>
+                <Button 
+                  className="w-full bg-primary hover:bg-primary-hover text-primary-foreground"
+                  onClick={() => handleRoleSelection('admin')}
+                >
+                  Continue as Admin
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Instructions */}
+          <div className="text-center mt-8">
+            <p className="text-sm text-muted-foreground">
+              Select your role to continue with authentication
+            </p>
           </div>
         </div>
       </div>

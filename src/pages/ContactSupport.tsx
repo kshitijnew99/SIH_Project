@@ -18,6 +18,8 @@ const ContactSupport = () => {
     emailAddress: "",
     phoneNumber: "",
     category: "",
+    inquiryType: "",
+    priority: "",
     subject: "",
     message: ""
   });
@@ -32,10 +34,10 @@ const ContactSupport = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.fullName || !formData.emailAddress || !formData.category || !formData.subject || !formData.message) {
+    if (!formData.fullName || !formData.emailAddress || !formData.category || !formData.inquiryType || !formData.priority || !formData.subject || !formData.message) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields including inquiry type and priority.",
         variant: "destructive",
       });
       return;
@@ -58,6 +60,8 @@ const ContactSupport = () => {
         emailAddress: "",
         phoneNumber: "",
         category: "",
+        inquiryType: "",
+        priority: "",
         subject: "",
         message: ""
       });
@@ -161,15 +165,55 @@ const ContactSupport = () => {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="land-registration">Land Registration</SelectItem>
-                          <SelectItem value="farmer-rights">Farmer Rights</SelectItem>
-                          <SelectItem value="government-schemes">Government Schemes</SelectItem>
-                          <SelectItem value="technical-support">Technical Support</SelectItem>
-                          <SelectItem value="billing-payment">Billing & Payment</SelectItem>
-                          <SelectItem value="account-issues">Account Issues</SelectItem>
-                          <SelectItem value="general-inquiry">General Inquiry</SelectItem>
+                          <SelectItem value="land-registration">🏡 Land Registration</SelectItem>
+                          <SelectItem value="farmer-rights">⚖️ Farmer Rights</SelectItem>
+                          <SelectItem value="government-schemes">🏛️ Government Schemes</SelectItem>
+                          <SelectItem value="technical-support">🔧 Technical Support</SelectItem>
+                          <SelectItem value="billing-payment">💳 Billing & Payment</SelectItem>
+                          <SelectItem value="account-issues">👤 Account Issues</SelectItem>
+                          <SelectItem value="platform-feedback">📝 Platform Feedback</SelectItem>
+                          <SelectItem value="general-inquiry">❓ General Inquiry</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+
+                  {/* Enhanced Inquiry Classification */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="inquiryType">Inquiry Type <span className="text-red-500">*</span></Label>
+                      <Select onValueChange={(value) => handleInputChange("inquiryType", value)} required>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select inquiry type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="complaint">🚨 Complaint</SelectItem>
+                          <SelectItem value="request">📋 Request</SelectItem>
+                          <SelectItem value="information">ℹ️ Information</SelectItem>
+                          <SelectItem value="suggestion">💡 Suggestion</SelectItem>
+                          <SelectItem value="bug-report">🐛 Bug Report</SelectItem>
+                          <SelectItem value="feature-request">✨ Feature Request</SelectItem>
+                          <SelectItem value="verification">✅ Verification</SelectItem>
+                          <SelectItem value="dispute">⚠️ Dispute</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500">Helps us categorize your inquiry for faster resolution</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="priority">Priority Level <span className="text-red-500">*</span></Label>
+                      <Select onValueChange={(value) => handleInputChange("priority", value)} required>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">🟢 Low - General inquiry (3-5 days)</SelectItem>
+                          <SelectItem value="medium">🟡 Medium - Account/Payment (1-2 days)</SelectItem>
+                          <SelectItem value="high">🟠 High - Technical/Land issues (6-12 hours)</SelectItem>
+                          <SelectItem value="urgent">🔴 Urgent - Security/Fraud (2-4 hours)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500">Expected response time in parentheses</p>
                     </div>
                   </div>
 
