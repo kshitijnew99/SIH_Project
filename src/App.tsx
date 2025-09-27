@@ -13,6 +13,7 @@ import AuthForm from "./pages/AuthForm";
 import RoleSelection from "./pages/RoleSelection";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import LandownerDashboard from "./pages/LandownerDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import AddNewLand from "./pages/AddNewLand";
 import ViewAnalytics from "./pages/ViewAnalytics";
 import UpdateProfile from "./pages/UpdateProfile";
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/role-selection" element={<RoleSelection />} />
           <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
           <Route path="/landowner-dashboard" element={<LandownerDashboard />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/landowner/add-new-land" element={<AddNewLand />} />
           <Route path="/add-land" element={<AddNewLand />} />
           <Route path="/landowner/view-analytics" element={<ViewAnalytics />} />

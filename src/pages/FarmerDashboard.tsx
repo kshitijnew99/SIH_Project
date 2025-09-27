@@ -11,7 +11,9 @@ import {
   BarChart3, 
   FileText, 
   Home,
-  Sprout
+  Sprout,
+  CheckCircle,
+  Clock
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import GovernmentSchemes from "@/components/GovernmentSchemes";
@@ -60,6 +62,32 @@ const FarmerDashboard = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back, {userData.name}!</h1>
           <p className="text-muted-foreground">Manage your farming activities and track your progress</p>
+          
+          {/* Verification Status */}
+          <div className="mt-4 p-4 bg-secondary/20 rounded-lg border">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <Sprout className="h-5 w-5 text-primary" />
+                <span className="font-medium">Account Status:</span>
+              </div>
+              {userData.aadhaarVerified ? (
+                <Badge className="bg-green-100 text-green-800 border-green-200">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Aadhaar Verified
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Aadhaar Verification Pending
+                </Badge>
+              )}
+            </div>
+            {!userData.aadhaarVerified && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Complete your Aadhaar verification to access all farming features and land rental opportunities.
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
