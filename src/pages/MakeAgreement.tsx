@@ -80,7 +80,7 @@ const MakeAgreement = () => {
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 3; // Simplified: Farmer Info -> Agreement Terms -> Signatures
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Default/sample land listings data (same as in Land.tsx)
@@ -219,8 +219,8 @@ const MakeAgreement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.farmerName || !formData.landownerName || !formData.landLocation || !formData.agreementType) {
+    // Validation - Only check farmer info and agreement terms
+    if (!formData.farmerName || !formData.agreementType) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -436,24 +436,21 @@ const MakeAgreement = () => {
             </Card>
           )}
 
-          {/* Step 2: Landowner Information */}
+          {/* Step 2: Agreement Terms */}
           {currentStep === 2 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Landowner Information
+                  <FileText className="h-5 w-5" />
+                  Agreement Terms
                 </CardTitle>
                 <CardDescription>
-                  {selectedLand ? 
-                    `Landowner details for ${selectedLand.title} have been pre-filled. Please verify and update if needed.` :
-                    "Please provide landowner details for the agreement"
-                  }
+                  Define the terms and conditions of the agreement
                 </CardDescription>
                 {selectedLand && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
-                    <p className="text-sm text-green-800">
-                      ✓ Making agreement for: <strong>{selectedLand.title}</strong> at {selectedLand.location}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                    <p className="text-sm text-blue-800">
+                      ✓ Creating agreement for: <strong>{selectedLand.title}</strong> at {selectedLand.location}
                     </p>
                   </div>
                 )}
@@ -461,67 +458,150 @@ const MakeAgreement = () => {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="landownerName">Full Name *</Label>
+                    <Label htmlFor="agreementType">Agreement Type *</Label>
+                    <Select onValueChange={(value) => handleInputChange('agreementType', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select agreement type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="crop-sharing">Crop Sharing</SelectItem>
+                        <SelectItem value="fixed-rent">Fixed Rent</SelectItem>
+                        <SelectItem value="partnership">Partnership</SelectItem>
+                        <SelectItem value="lease">Lease Agreement</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="cropType">Crop Type</Label>
                     <Input
-                      id="landownerName"
-                      value={formData.landownerName}
-                      onChange={(e) => handleInputChange('landownerName', e.target.value)}
-                      placeholder="Enter full name"
+                      id="cropType"
+                      value={formData.cropType}
+                      onChange={(e) => handleInputChange('cropType', e.target.value)}
+                      placeholder="Enter crop type (e.g., Rice, Wheat)"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Duration (months) *</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={formData.duration}
+                      onChange={(e) => handleInputChange('duration', e.target.value)}
+                      placeholder="Enter duration in months"
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="landownerPhone">Phone Number *</Label>
+                    <Label htmlFor="startDate">Start Date *</Label>
                     <Input
-                      id="landownerPhone"
-                      value={formData.landownerPhone}
-                      onChange={(e) => handleInputChange('landownerPhone', e.target.value)}
-                      placeholder="Enter phone number"
+                      id="startDate"
+                      type="date"
+                      value={formData.startDate}
+                      onChange={(e) => handleInputChange('startDate', e.target.value)}
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="landownerEmail">Email Address</Label>
+                    <Label htmlFor="endDate">End Date *</Label>
                     <Input
-                      id="landownerEmail"
-                      type="email"
-                      value={formData.landownerEmail}
-                      onChange={(e) => handleInputChange('landownerEmail', e.target.value)}
-                      placeholder="Enter email address"
+                      id="endDate"
+                      type="date"
+                      value={formData.endDate}
+                      onChange={(e) => handleInputChange('endDate', e.target.value)}
+                      required
                     />
                   </div>
                   
+                  {formData.agreementType === 'crop-sharing' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="sharePercentage">Farmer's Share (%)</Label>
+                      <Input
+                        id="sharePercentage"
+                        type="number"
+                        max="100"
+                        value={formData.sharePercentage}
+                        onChange={(e) => handleInputChange('sharePercentage', e.target.value)}
+                        placeholder="Enter percentage (e.g., 70)"
+                      />
+                    </div>
+                  )}
+                  
+                  {formData.agreementType === 'fixed-rent' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="rentAmount">Rent Amount (₹)</Label>
+                      <Input
+                        id="rentAmount"
+                        type="number"
+                        value={formData.rentAmount}
+                        onChange={(e) => handleInputChange('rentAmount', e.target.value)}
+                        placeholder="Enter rent amount"
+                      />
+                    </div>
+                  )}
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="landownerAadhaar">Aadhaar Number *</Label>
+                    <Label htmlFor="advanceAmount">Advance Amount (₹)</Label>
                     <Input
-                      id="landownerAadhaar"
-                      value={formData.landownerAadhaar}
-                      onChange={(e) => handleInputChange('landownerAadhaar', e.target.value)}
-                      placeholder="Enter 12-digit Aadhaar number"
-                      maxLength={12}
-                      required
+                      id="advanceAmount"
+                      type="number"
+                      value={formData.advanceAmount}
+                      onChange={(e) => handleInputChange('advanceAmount', e.target.value)}
+                      placeholder="Enter advance amount if any"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="landownerAddress">Address *</Label>
+                  <Label htmlFor="terms">Terms and Conditions</Label>
                   <Textarea
-                    id="landownerAddress"
-                    value={formData.landownerAddress}
-                    onChange={(e) => handleInputChange('landownerAddress', e.target.value)}
-                    placeholder="Enter complete address"
-                    required
+                    id="terms"
+                    value={formData.terms}
+                    onChange={(e) => handleInputChange('terms', e.target.value)}
+                    placeholder="Enter specific terms and conditions"
+                    rows={4}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="responsibilities">Responsibilities</Label>
+                  <Textarea
+                    id="responsibilities"
+                    value={formData.responsibilities}
+                    onChange={(e) => handleInputChange('responsibilities', e.target.value)}
+                    placeholder="Define responsibilities of farmer and landowner"
+                    rows={4}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="witnessName">Witness Name</Label>
+                  <Input
+                    id="witnessName"
+                    value={formData.witnessName}
+                    onChange={(e) => handleInputChange('witnessName', e.target.value)}
+                    placeholder="Enter witness name"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="witnessPhone">Witness Phone</Label>
+                  <Input
+                    id="witnessPhone"
+                    value={formData.witnessPhone}
+                    onChange={(e) => handleInputChange('witnessPhone', e.target.value)}
+                    placeholder="Enter witness phone number"
                   />
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Step 3: Land Details */}
-          {currentStep === 3 && (
+          {/* Step 3: Land Details - HIDDEN */}
+          {false && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -630,8 +710,8 @@ const MakeAgreement = () => {
             </Card>
           )}
 
-          {/* Step 4: Agreement Terms */}
-          {currentStep === 4 && (
+          {/* Step 4: Agreement Terms - REMOVED */}
+          {false && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -787,8 +867,8 @@ const MakeAgreement = () => {
             </Card>
           )}
 
-          {/* Step 5: Signatures & Review */}
-          {currentStep === 5 && (
+          {/* Step 3: Signatures & Review */}
+          {currentStep === 3 && (
             <div className="space-y-6">
               {/* Agreement Summary */}
               <Card>
