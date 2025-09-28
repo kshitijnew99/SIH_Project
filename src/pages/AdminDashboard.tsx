@@ -124,7 +124,15 @@ const AdminDashboard = () => {
             totalAgreements: data.stats.totalAgreements || 0,
             pendingAgreements: data.stats.pendingAgreements || 0,
             approvedAgreements: data.stats.approvedAgreements || 0,
-            rejectedAgreements: data.stats.rejectedAgreements || 0
+            rejectedAgreements: data.stats.rejectedAgreements || 0,
+            totalNotifications: data.stats.totalNotifications || 0,
+            activeNotifications: data.stats.activeNotifications || 0,
+            totalIssues: data.stats.totalIssues || 0,
+            pendingIssues: data.stats.pendingIssues || 0,
+            resolvedIssues: data.stats.resolvedIssues || 0,
+            highPriorityIssues: data.stats.highPriorityIssues || 0,
+            totalPolicies: data.stats.totalPolicies || 0,
+            activePolicies: data.stats.activePolicies || 0
           });
         } else {
           console.error('AdminDashboard: Failed to fetch stats:', data.message);
@@ -220,7 +228,15 @@ const AdminDashboard = () => {
                 totalAgreements: statsData.stats.totalAgreements || 0,
                 pendingAgreements: statsData.stats.pendingAgreements || 0,
                 approvedAgreements: statsData.stats.approvedAgreements || 0,
-                rejectedAgreements: statsData.stats.rejectedAgreements || 0
+                rejectedAgreements: statsData.stats.rejectedAgreements || 0,
+                totalNotifications: statsData.stats.totalNotifications || 0,
+                activeNotifications: statsData.stats.activeNotifications || 0,
+                totalIssues: statsData.stats.totalIssues || 0,
+                pendingIssues: statsData.stats.pendingIssues || 0,
+                resolvedIssues: statsData.stats.resolvedIssues || 0,
+                highPriorityIssues: statsData.stats.highPriorityIssues || 0,
+                totalPolicies: statsData.stats.totalPolicies || 0,
+                activePolicies: statsData.stats.activePolicies || 0
               });
             }
           } catch (error) {
