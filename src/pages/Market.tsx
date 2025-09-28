@@ -1,14 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, Minus, MapPin, Calendar, IndianRupee, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, TrendingDown, Minus, MapPin, Calendar, IndianRupee, ArrowUpRight, ArrowDownRight, Building2, Phone, Mail, Clock, Eye, Users, Briefcase } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+
+interface Opportunity {
+  id: number;
+  opportunityName: string;
+  state: string;
+  district: string;
+  selectedCrop: string;
+  description: string;
+  contactDetails: {
+    name: string;
+    phone: string;
+    email: string;
+    office: string;
+  };
+  organizationName: string;
+  opportunityType: string;
+  requirements: string;
+  benefits: string;
+  applicationDeadline: string | null;
+  validFrom: string;
+  validTo: string | null;
+  createdAt: string;
+  applicationsCount: number;
+  views: number;
+}
 
 const Market = () => {
   const [selectedCrop, setSelectedCrop] = useState("wheat");
   const [selectedState, setSelectedState] = useState("all");
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [isLoadingOpportunities, setIsLoadingOpportunities] = useState(true);
 
   // Sample market data - Extended 40x for better filter testing
   const marketData = {
@@ -436,6 +464,37 @@ const Market = () => {
   const bestPrice = filteredData.length > 0 ? Math.max(...filteredData.map(item => item.price)) : 0;
   const avgPrice = filteredData.length > 0 ? Math.round(filteredData.reduce((sum, item) => sum + item.price, 0) / filteredData.length) : 0;
 
+  // Fetch opportunities
+  useEffect(() => {
+    const fetchOpportunities = async () => {
+      try {
+        setIsLoadingOpportunities(true);
+        const response = await fetch('http://localhost:5001/api/opportunities?limit=6');
+        const data = await response.json();
+        
+        if (data.success) {
+          setOpportunities(data.opportunities);
+        }
+      } catch (error) {
+        console.error('Error fetching opportunities:', error);
+      } finally {
+        setIsLoadingOpportunities(false);
+      }
+    };
+
+    fetchOpportunities();
+  }, []);
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
   return (
     <>
       <Navbar />
@@ -449,6 +508,133 @@ const Market = () => {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Get real-time prices from different mandis across India. Make informed decisions and maximize your profits.
             </p>
+          </div>
+
+          {/* Opportunities Section */}
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  Latest Opportunities
+                </h2>
+                <p className="text-muted-foreground">
+                  Discover new opportunities from big organizations and government schemes
+                </p>
+              </div>
+              <Badge variant="secondary" className="px-3 py-1">
+                <Briefcase className="w-4 h-4 mr-1" />
+                {opportunities.length} Active
+              </Badge>
+            </div>
+
+            {isLoadingOpportunities ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardHeader>
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="h-3 bg-gray-200 rounded"></div>
+                        <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : opportunities.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {opportunities.slice(0, 6).map((opportunity) => (
+                  <Card key={opportunity.id} className="hover:shadow-lg transition-shadow duration-200 border-2 hover:border-green-200">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <Badge 
+                          variant={opportunity.opportunityType === 'government-scheme' ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {opportunity.opportunityType.replace('-', ' ').toUpperCase()}
+                        </Badge>
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Eye className="w-3 h-3 mr-1" />
+                          {opportunity.views}
+                        </div>
+                      </div>
+                      <CardTitle className="text-lg line-clamp-2">
+                        {opportunity.opportunityName}
+                      </CardTitle>
+                      <CardDescription className="flex items-center text-sm">
+                        <Building2 className="w-4 h-4 mr-1" />
+                        {opportunity.organizationName}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {/* Location & Crop */}
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center text-muted-foreground">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          {opportunity.district}, {opportunity.state}
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {opportunity.selectedCrop}
+                        </Badge>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {opportunity.description}
+                      </p>
+
+                      {/* Benefits */}
+                      {opportunity.benefits && (
+                        <div className="text-sm">
+                          <span className="font-medium text-green-600">Benefits: </span>
+                          <span className="text-muted-foreground line-clamp-1">
+                            {opportunity.benefits}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Contact & Deadline */}
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center text-muted-foreground">
+                          <Phone className="w-4 h-4 mr-1" />
+                          {opportunity.contactDetails.name}
+                        </div>
+                        {opportunity.applicationDeadline && (
+                          <div className="flex items-center text-orange-600">
+                            <Clock className="w-4 h-4 mr-1" />
+                            {formatDate(opportunity.applicationDeadline)}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Applications Count */}
+                      <div className="flex items-center justify-between pt-2 border-t">
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Users className="w-4 h-4 mr-1" />
+                          {opportunity.applicationsCount} applications
+                        </div>
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                          View Details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <Briefcase className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Opportunities Available</h3>
+                  <p className="text-muted-foreground">
+                    Check back later for new opportunities from organizations and government schemes.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Filters and Stats */}

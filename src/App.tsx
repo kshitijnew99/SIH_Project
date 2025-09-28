@@ -28,6 +28,7 @@ import AgreementManagement from "./pages/admin/AgreementManagement";
 import NotificationSystem from "./pages/admin/NotificationSystem";
 import IssueManagement from "./pages/admin/IssueManagement";
 import PolicyManagement from "./pages/admin/PolicyManagement";
+import AddOpportunity from "./pages/admin/AddOpportunity";
 import MakeAgreement from "./pages/MakeAgreement";
 import ErrorBoundary from "./components/ErrorBoundary";
 import TestPage from "./pages/TestPage";
@@ -69,6 +70,7 @@ const App = () => (
           <Route path="/admin/notification-system" element={<NotificationSystem />} />
           <Route path="/admin/issue-management" element={<IssueManagement />} />
           <Route path="/admin/policy-management" element={<PolicyManagement />} />
+          <Route path="/admin/add-opportunity" element={<AddOpportunity />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

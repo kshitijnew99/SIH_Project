@@ -808,6 +808,13 @@ const AdminDashboard = () => {
                 </Button>
               </Link>
               
+              <Link to="/admin/add-opportunity" className="w-full">
+                <Button className="w-full justify-start h-12" variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Opportunity
+                </Button>
+              </Link>
+              
               <Button className="w-full justify-start h-12" variant="outline">
                 <Database className="h-4 w-4 mr-2" />
                 Platform Analytics

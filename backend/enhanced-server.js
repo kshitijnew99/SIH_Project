@@ -96,6 +96,7 @@ let agreements = [];
 let notifications = [];
 let issues = [];
 let policies = [];
+let opportunities = [];
 let userIdCounter = 1;
 let landIdCounter = 1;
 let verificationIdCounter = 1;
@@ -103,6 +104,7 @@ let agreementIdCounter = 1;
 let notificationIdCounter = 1;
 let issueIdCounter = 1;
 let policyIdCounter = 1;
+let opportunityIdCounter = 1;
 
 // Utility functions
 const generateToken = (userId) => `token_${userId}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -527,7 +529,9 @@ app.get('/api/admin/stats', (req, res) => {
       resolvedIssues: issues.filter(i => i.status === 'resolved').length,
       highPriorityIssues: issues.filter(i => i.priority === 'high' || i.priority === 'urgent').length,
       totalPolicies: policies.length,
-      activePolicies: policies.filter(p => p.status === 'active').length
+      activePolicies: policies.filter(p => p.status === 'active').length,
+      totalOpportunities: opportunities.length,
+      activeOpportunities: opportunities.filter(o => o.status === 'active').length
     };
 
     res.json({ 
@@ -1358,6 +1362,242 @@ app.put('/api/admin/policies/:id', (req, res) => {
   }
 });
 
+// Opportunity Management Endpoints
+app.get('/api/admin/opportunities', (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const adminUser = getUserByToken(token);
+
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+
+    res.json({ 
+      success: true, 
+      opportunities: opportunities,
+      totalCount: opportunities.length
+    });
+  } catch (error) {
+    console.error('Get opportunities error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Create new opportunity
+app.post('/api/admin/opportunities', (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const adminUser = getUserByToken(token);
+
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+
+    const { 
+      opportunityName, 
+      state, 
+      district, 
+      selectedCrop, 
+      description, 
+      contactDetails,
+      organizationName,
+      opportunityType,
+      requirements,
+      benefits,
+      applicationDeadline,
+      validFrom,
+      validTo
+    } = req.body;
+
+    // Validation
+    if (!opportunityName || !state || !district || !selectedCrop || !description || !contactDetails) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Opportunity name, state, district, crop, description, and contact details are required' 
+      });
+    }
+
+    const opportunity = {
+      id: opportunityIdCounter++,
+      opportunityName,
+      state,
+      district,
+      selectedCrop,
+      description,
+      contactDetails,
+      organizationName: organizationName || 'Government Organization',
+      opportunityType: opportunityType || 'general',
+      requirements: requirements || '',
+      benefits: benefits || '',
+      applicationDeadline: applicationDeadline || null,
+      validFrom: validFrom || new Date().toISOString(),
+      validTo: validTo || null,
+      createdBy: adminUser.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: 'active',
+      applicationsCount: 0,
+      views: 0
+    };
+
+    opportunities.push(opportunity);
+
+    console.log(`Opportunity created by admin ${adminUser.id}: ${opportunityName} for ${selectedCrop} in ${district}, ${state}`);
+
+    res.json({ 
+      success: true, 
+      message: 'Opportunity created successfully',
+      opportunity: opportunity
+    });
+  } catch (error) {
+    console.error('Create opportunity error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Update opportunity
+app.put('/api/admin/opportunities/:id', (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const adminUser = getUserByToken(token);
+
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+
+    const opportunityId = parseInt(req.params.id);
+    const { opportunityName, state, district, selectedCrop, description, contactDetails, status } = req.body;
+
+    const opportunity = opportunities.find(opp => opp.id === opportunityId);
+    if (!opportunity) {
+      return res.status(404).json({ success: false, message: 'Opportunity not found' });
+    }
+
+    if (opportunityName) opportunity.opportunityName = opportunityName;
+    if (state) opportunity.state = state;
+    if (district) opportunity.district = district;
+    if (selectedCrop) opportunity.selectedCrop = selectedCrop;
+    if (description) opportunity.description = description;
+    if (contactDetails) opportunity.contactDetails = contactDetails;
+    if (status) opportunity.status = status;
+    
+    opportunity.updatedBy = adminUser.id;
+    opportunity.updatedAt = new Date().toISOString();
+
+    res.json({ 
+      success: true, 
+      message: 'Opportunity updated successfully',
+      opportunity: opportunity
+    });
+  } catch (error) {
+    console.error('Update opportunity error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Delete opportunity
+app.delete('/api/admin/opportunities/:id', (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const adminUser = getUserByToken(token);
+
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+
+    const opportunityId = parseInt(req.params.id);
+    const opportunityIndex = opportunities.findIndex(opp => opp.id === opportunityId);
+
+    if (opportunityIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Opportunity not found' });
+    }
+
+    const deletedOpportunity = opportunities.splice(opportunityIndex, 1)[0];
+
+    console.log(`Opportunity ${opportunityId} deleted by admin ${adminUser.id}`);
+
+    res.json({ 
+      success: true, 
+      message: 'Opportunity deleted successfully',
+      opportunity: deletedOpportunity
+    });
+  } catch (error) {
+    console.error('Delete opportunity error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Public endpoint to get opportunities for farmers/market page
+app.get('/api/opportunities', (req, res) => {
+  try {
+    const { state, district, crop, limit = 20 } = req.query;
+    
+    let filteredOpportunities = opportunities.filter(opp => opp.status === 'active');
+
+    // Apply filters
+    if (state) {
+      filteredOpportunities = filteredOpportunities.filter(opp => 
+        opp.state.toLowerCase().includes(state.toLowerCase())
+      );
+    }
+    if (district) {
+      filteredOpportunities = filteredOpportunities.filter(opp => 
+        opp.district.toLowerCase().includes(district.toLowerCase())
+      );
+    }
+    if (crop) {
+      filteredOpportunities = filteredOpportunities.filter(opp => 
+        opp.selectedCrop.toLowerCase().includes(crop.toLowerCase())
+      );
+    }
+
+    // Sort by creation date (newest first)
+    filteredOpportunities.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Limit results
+    filteredOpportunities = filteredOpportunities.slice(0, parseInt(limit));
+
+    // Increment view count for displayed opportunities
+    filteredOpportunities.forEach(opp => {
+      const originalOpp = opportunities.find(o => o.id === opp.id);
+      if (originalOpp) originalOpp.views++;
+    });
+
+    res.json({ 
+      success: true, 
+      opportunities: filteredOpportunities,
+      total: filteredOpportunities.length
+    });
+
+  } catch (error) {
+    console.error('Get public opportunities error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
+    });
+  }
+});
+
 // Submit verification request (for farmers/landowners to submit documents)
 app.post('/api/verification/submit', (req, res) => {
   try {
@@ -1796,12 +2036,98 @@ if (users.length === 0) {
       }
     ];
     
+    // Sample opportunities
+    const sampleOpportunities = [
+      {
+        id: opportunityIdCounter++,
+        opportunityName: 'Organic Wheat Export Contract',
+        state: 'Punjab',
+        district: 'Amritsar',
+        selectedCrop: 'Wheat',
+        description: 'Major food corporation seeking organic wheat farmers for direct export contracts. Guaranteed purchase at premium rates with advance payments.',
+        contactDetails: {
+          name: 'Mr. Singh',
+          phone: '+91-98765-43210',
+          email: 'contracts@agriexport.com',
+          office: 'Amritsar Agricultural Hub'
+        },
+        organizationName: 'Punjab Agri Export Corporation',
+        opportunityType: 'export-contract',
+        requirements: 'Organic certification, minimum 10 acres, irrigation facility',
+        benefits: '₹2,800 per quintal, advance payment, free organic certification support',
+        applicationDeadline: new Date(Date.now() + 2592000000).toISOString(), // 30 days from now
+        validFrom: new Date().toISOString(),
+        validTo: new Date(Date.now() + 7776000000).toISOString(), // 90 days from now
+        createdBy: 3,
+        createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+        updatedAt: new Date(Date.now() - 86400000).toISOString(),
+        status: 'active',
+        applicationsCount: 12,
+        views: 145
+      },
+      {
+        id: opportunityIdCounter++,
+        opportunityName: 'Rice Processing Unit Partnership',
+        state: 'Haryana',
+        district: 'Karnal',
+        selectedCrop: 'Rice',
+        description: 'Leading rice processing company looking for farmer partnerships. Guaranteed procurement with modern farming technique support.',
+        contactDetails: {
+          name: 'Ms. Priya Sharma',
+          phone: '+91-97654-32109',
+          email: 'partnerships@ricetech.in',
+          office: 'Karnal Industrial Area'
+        },
+        organizationName: 'RiceTech Industries Ltd',
+        opportunityType: 'partnership',
+        requirements: 'Minimum 5 acres, access to water, willingness to adopt new techniques',
+        benefits: 'Free seeds, technical support, guaranteed purchase at ₹2,200/quintal',
+        applicationDeadline: new Date(Date.now() + 1814400000).toISOString(), // 21 days from now
+        validFrom: new Date().toISOString(),
+        validTo: new Date(Date.now() + 5184000000).toISOString(), // 60 days from now
+        createdBy: 3,
+        createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+        updatedAt: new Date(Date.now() - 172800000).toISOString(),
+        status: 'active',
+        applicationsCount: 8,
+        views: 89
+      },
+      {
+        id: opportunityIdCounter++,
+        opportunityName: 'Cotton Buyback Guarantee Scheme',
+        state: 'Gujarat',
+        district: 'Ahmedabad',
+        selectedCrop: 'Cotton',
+        description: 'Government-backed cotton buyback scheme with guaranteed minimum support price and quality bonus.',
+        contactDetails: {
+          name: 'Cotton Development Officer',
+          phone: '+91-79-2657-8901',
+          email: 'cotton@gujaratagri.gov.in',
+          office: 'Gujarat State Agricultural Marketing Board'
+        },
+        organizationName: 'Gujarat Agricultural Marketing Board',
+        opportunityType: 'government-scheme',
+        requirements: 'Valid farmer ID, land documents, cotton farming experience',
+        benefits: 'MSP + 10% bonus, free quality testing, storage facilities',
+        applicationDeadline: new Date(Date.now() + 4320000000).toISOString(), // 50 days from now
+        validFrom: new Date().toISOString(),
+        validTo: new Date(Date.now() + 15552000000).toISOString(), // 180 days from now
+        createdBy: 3,
+        createdAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+        updatedAt: new Date(Date.now() - 259200000).toISOString(),
+        status: 'active',
+        applicationsCount: 25,
+        views: 203
+      }
+    ];
+    
   agreements.push(...sampleAgreements);
   notifications.push(...sampleNotifications);
   issues.push(...sampleIssues);
   policies.push(...samplePolicies);
+  opportunities.push(...sampleOpportunities);
   
-  console.log(`✅ Sample data added: ${users.length} users, ${lands.length} lands, ${verificationRequests.length} verifications, ${agreements.length} agreements, ${notifications.length} notifications, ${issues.length} issues, ${policies.length} policies`);
+  console.log(`✅ Sample data added: ${users.length} users, ${lands.length} lands, ${verificationRequests.length} verifications, ${agreements.length} agreements, ${notifications.length} notifications, ${issues.length} issues, ${policies.length} policies, ${opportunities.length} opportunities`);
 }
 
 // Start server
