@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, TrendingUp, Wrench, Shield, Tractor, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 const Hero = () => {
+  const { t } = useTranslation();
   const [userData, setUserData] = useState<{ name: string; role: string } | null>(null);
 
   useEffect(() => {
@@ -66,42 +68,8 @@ const Hero = () => {
               Across India
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-              Access land opportunities, real-time market prices, and affordable farming tools. 
-              Build a sustainable future for your agricultural journey.
+              {t("home.subtitle")}
             </p>
-
-            {/* Dashboard Access for Logged-in Users */}
-            {userData && (
-              <div className="mt-8 p-6 bg-card/50 backdrop-blur-sm rounded-xl border border-primary/20 max-w-md mx-auto">
-                <div className="flex items-center justify-center space-x-3 mb-4">
-                  {(() => {
-                    const IconComponent = getRoleIcon(userData.role);
-                    return <IconComponent className="h-6 w-6 text-primary" />;
-                  })()}
-                  <span className="text-lg font-semibold text-foreground">
-                    Welcome back, {userData.name}!
-                  </span>
-                </div>
-                <Link to={getDashboardPath(userData.role)}>
-                  <Button variant="hero" size="lg" className="w-full">
-                    Go to {userData.role === 'admin' ? 'Admin' : userData.role === 'farmer' ? 'Farmer' : 'Landowner'} Dashboard
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-              </div>
-            )}
-
-            {/* Register/Login for Non-logged Users */}
-            {!userData && (
-              <div className="mt-8">
-                <Link to="/role-selection">
-                  <Button variant="hero" size="lg">
-                    Get Started Today
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-              </div>
-            )}
           </div>
 
           {/* Stats */}

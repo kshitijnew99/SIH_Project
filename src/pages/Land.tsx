@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MapPin, Droplets, Zap, IndianRupee, Calendar, FileText, Filter } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useTranslation } from "react-i18next";
 
 const indianStates = [
   "Andhra Pradesh",
@@ -886,6 +887,7 @@ const districtsByState: { [key: string]: string[] } = {
 };
 
 const Land = () => {
+  const { t } = useTranslation();
   const [filterState, setFilterState] = useState("all");
   const [filterDistrict, setFilterDistrict] = useState("all");
   const [priceModel, setPriceModel] = useState("fixed"); // "fixed" or "percentage"
@@ -1042,10 +1044,10 @@ const Land = () => {
           {/* Header */}
           <div className="text-center mb-10">
             <h1 className="text-4xl font-bold text-foreground mb-4">
-              Find Agricultural Land
+              {t("land.title")}
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Browse verified agricultural land available for lease. Connect directly with landowners and generate legal agreements.
+              {t("land.subtitle")}
             </p>
           </div>
 
@@ -1054,13 +1056,13 @@ const Land = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Filter className="h-5 w-5" />
-                Filter Land
+                {t("land.filterLand")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
+                  <Label htmlFor="state">{t("land.state")}</Label>
                   <Select 
                     value={filterState} 
                     onValueChange={(value) => {
@@ -1082,7 +1084,7 @@ const Land = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="district">District</Label>
+                  <Label htmlFor="district">{t("land.district")}</Label>
                   <Select 
                     value={filterDistrict} 
                     onValueChange={setFilterDistrict}
@@ -1205,15 +1207,15 @@ const Land = () => {
                     <div className="space-y-6">
                       <div className="flex gap-3">
                         <Button className="flex-1" variant="outline">
-                          View Details
+                          {t("land.viewDetails")}
                         </Button>
                         <Button className="flex-1" variant="secondary">
-                          Contact Owner
+                          {t("land.contactOwner")}
                         </Button>
                       </div>
                       <Link to={`/make-agreement?landId=${land.id}`} className="w-full">
                         <Button className="w-full" variant="hero">
-                          Make Agreement
+                          {t("land.makeAgreement")}
                         </Button>
                       </Link>
                     </div>

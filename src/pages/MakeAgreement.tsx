@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
+import { useTranslation } from "react-i18next";
 import { 
   ArrowLeft, 
   FileText, 
@@ -28,6 +29,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 // Note: SignatureCanvas will be installed separately
 
 const MakeAgreement = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -316,7 +318,7 @@ const MakeAgreement = () => {
               <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center">
                 <FileText className="text-white h-4 w-4" />
               </div>
-              <span className="font-semibold text-gray-900">Create Land Agreement</span>
+              <span className="font-semibold text-gray-900">{t("agreement.title")}</span>
             </div>
           </div>
         </div>
@@ -348,10 +350,10 @@ const MakeAgreement = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Farmer Information
+                  {t("agreement.farmerInfo")}
                 </CardTitle>
                 <CardDescription>
-                  Please provide farmer details for the agreement
+                  {t("agreement.farmerInfoDesc")}
                 </CardDescription>
                 {selectedLand && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
@@ -367,35 +369,35 @@ const MakeAgreement = () => {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="farmerName">Full Name *</Label>
+                    <Label htmlFor="farmerName">{t("agreement.fullName")} *</Label>
                     <Input
                       id="farmerName"
                       value={formData.farmerName}
                       onChange={(e) => handleInputChange('farmerName', e.target.value)}
-                      placeholder="Enter full name"
+                      placeholder={t("agreement.fullName")}
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="farmerPhone">Phone Number *</Label>
+                    <Label htmlFor="farmerPhone">{t("agreement.phoneNumber")} *</Label>
                     <Input
                       id="farmerPhone"
                       value={formData.farmerPhone}
                       onChange={(e) => handleInputChange('farmerPhone', e.target.value)}
-                      placeholder="Enter phone number"
+                      placeholder={t("agreement.phoneNumber")}
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="farmerEmail">Email Address</Label>
+                    <Label htmlFor="farmerEmail">{t("agreement.emailAddress")}</Label>
                     <Input
                       id="farmerEmail"
                       type="email"
                       value={formData.farmerEmail}
                       onChange={(e) => handleInputChange('farmerEmail', e.target.value)}
-                      placeholder="Enter email address"
+                      placeholder={t("agreement.emailAddress")}
                     />
                   </div>
                   
@@ -442,10 +444,10 @@ const MakeAgreement = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
-                  Agreement Terms
+                  {t("agreement.agreementTerms")}
                 </CardTitle>
                 <CardDescription>
-                  Define the terms and conditions of the agreement
+                  {t("agreement.agreementTermsDesc")}
                 </CardDescription>
                 {selectedLand && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">

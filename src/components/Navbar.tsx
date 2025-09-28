@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Sprout } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ProfileMenu } from "./ui/profile-menu";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const Navbar = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [userData, setUserData] = useState<{ name: string; role: string } | null>(null);
 
@@ -44,12 +47,12 @@ const Navbar = () => {
   }, [userData]);
 
   const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "Find Land", path: "/land" },
-    { name: "Market Prices", path: "/market" },
-    { name: "Rent Tools", path: "/tools" },
-    { name: "Gov Schemes", path: "/schemes" },
-    { name: "About", path: "/about" },
+    { name: t("nav.home"), path: "/" },
+    { name: t("nav.findLand"), path: "/land" },
+    { name: t("nav.market"), path: "/market" },
+    { name: t("nav.equipment"), path: "/tools" },
+    { name: t("nav.schemes"), path: "/schemes" },
+    { name: t("nav.about"), path: "/about" },
   ];
 
   return (
@@ -74,12 +77,13 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
+            <LanguageSwitcher />
             {userData ? (
               <ProfileMenu userData={userData} />
             ) : (
               <Link to="/role-selection">
                 <Button variant="hero" size="sm">
-                  Register / Login
+                  {t("nav.register")} / {t("nav.login")}
                 </Button>
               </Link>
             )}
@@ -107,6 +111,9 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
+            <div className="px-3 py-2">
+              <LanguageSwitcher />
+            </div>
             {userData ? (
               <div className="px-3 py-2">
                 <ProfileMenu userData={userData} />
@@ -118,7 +125,7 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
               >
                 <Button variant="hero" size="sm" className="w-full">
-                  Register / Login
+                  {t("nav.register")} / {t("nav.login")}
                 </Button>
               </Link>
             )}

@@ -28,9 +28,11 @@ import {
   Plus
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 
 const AdminDashboard = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalFarmers: 0,
@@ -529,7 +531,7 @@ const AdminDashboard = () => {
             <div className="flex items-center space-x-4">
               <Badge variant="outline" className="bg-accent/20 text-primary border-accent">
                 <Shield className="h-3 w-3 mr-1" />
-                Admin Dashboard
+                {t("admin.dashboard")}
               </Badge>
               <Link to="/">
                 <Button variant="ghost" size="sm">
