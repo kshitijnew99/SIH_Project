@@ -22,6 +22,12 @@ import About from "./pages/About";
 import SchemesPage from "./pages/SchemesPage";
 import ContactSupport from "./pages/ContactSupport";
 import AddNewLandTest from "./pages/AddNewLandTest";
+import VerificationManagement from "./pages/admin/VerificationManagement";
+import UserManagement from "./pages/admin/UserManagement";
+import AgreementManagement from "./pages/admin/AgreementManagement";
+import NotificationSystem from "./pages/admin/NotificationSystem";
+import IssueManagement from "./pages/admin/IssueManagement";
+import PolicyManagement from "./pages/admin/PolicyManagement";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +55,15 @@ const App = () => (
           <Route path="/schemes" element={<SchemesPage />} />
           <Route path="/contact-support" element={<ContactSupport />} />
           <Route path="/test-add-land" element={<AddNewLandTest />} />
+          
+          {/* Admin Management Routes */}
+          <Route path="/admin/verification-management" element={<VerificationManagement />} />
+          <Route path="/admin/user-management" element={<UserManagement />} />
+          <Route path="/admin/agreement-management" element={<AgreementManagement />} />
+          <Route path="/admin/notification-system" element={<NotificationSystem />} />
+          <Route path="/admin/issue-management" element={<IssueManagement />} />
+          <Route path="/admin/policy-management" element={<PolicyManagement />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

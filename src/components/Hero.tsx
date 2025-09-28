@@ -1,8 +1,42 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users, TrendingUp, Wrench } from "lucide-react";
+import { ArrowRight, Users, TrendingUp, Wrench, Shield, Tractor, Home } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const Hero = () => {
+  const [userData, setUserData] = useState<{ name: string; role: string } | null>(null);
+
+  useEffect(() => {
+    const storedData = localStorage.getItem('userData');
+    const token = localStorage.getItem('userToken');
+    if (storedData && token) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        setUserData(parsedData);
+      } catch (error) {
+        console.error('Error parsing userData:', error);
+      }
+    }
+  }, []);
+
+  const getDashboardPath = (role: string) => {
+    switch (role) {
+      case 'admin': return '/admin-dashboard';
+      case 'farmer': return '/farmer-dashboard';
+      case 'landowner': return '/landowner-dashboard';
+      default: return '/';
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin': return Shield;
+      case 'farmer': return Tractor;
+      case 'landowner': return Home;
+      default: return Users;
+    }
+  };
+
   const stats = [
     { icon: Users, value: "50,000+", label: "Farmers Connected" },
     { icon: TrendingUp, value: "₹2.5 Cr", label: "Income Generated" },
@@ -35,6 +69,39 @@ const Hero = () => {
               Access land opportunities, real-time market prices, and affordable farming tools. 
               Build a sustainable future for your agricultural journey.
             </p>
+
+            {/* Dashboard Access for Logged-in Users */}
+            {userData && (
+              <div className="mt-8 p-6 bg-card/50 backdrop-blur-sm rounded-xl border border-primary/20 max-w-md mx-auto">
+                <div className="flex items-center justify-center space-x-3 mb-4">
+                  {(() => {
+                    const IconComponent = getRoleIcon(userData.role);
+                    return <IconComponent className="h-6 w-6 text-primary" />;
+                  })()}
+                  <span className="text-lg font-semibold text-foreground">
+                    Welcome back, {userData.name}!
+                  </span>
+                </div>
+                <Link to={getDashboardPath(userData.role)}>
+                  <Button variant="hero" size="lg" className="w-full">
+                    Go to {userData.role === 'admin' ? 'Admin' : userData.role === 'farmer' ? 'Farmer' : 'Landowner'} Dashboard
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Register/Login for Non-logged Users */}
+            {!userData && (
+              <div className="mt-8">
+                <Link to="/role-selection">
+                  <Button variant="hero" size="lg">
+                    Get Started Today
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Stats */}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Token Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .button {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .success {
+            background-color: #2ecc71;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: none;
+        }
+        .info {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .token-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Admin Token Setup</h1>
+        
+        <div class="info">
+            <strong>Purpose:</strong> This tool sets up the admin authentication token so you can access the Issue Management and Policy Management pages.
+        </div>
+
+        <div class="token-info">
+            <strong>Admin Credentials:</strong><br>
+            Email: admin@gov.in<br>
+            Password: admin123<br>
+            Token: token_3_1759066505116_11cp8q
+        </div>
+
+        <button class="button" onclick="setupAdminToken()">
+            Setup Admin Token
+        </button>
+
+        <div id="success" class="success">
+            ✅ Admin token setup complete! You can now access all admin pages.
+        </div>
+
+        <div class="info">
+            <strong>Next Steps:</strong><br>
+            1. Click the button above to setup the admin token<br>
+            2. Navigate to <a href="http://localhost:8086/admin-dashboard" target="_blank">Admin Dashboard</a><br>
+            3. Click on "Issue Management" or "Policy Management"<br>
+            4. The pages should now load properly with data
+        </div>
+    </div>
+
+    <script>
+        function setupAdminToken() {
+            try {
+                console.log('Setting up admin token for testing...');
+
+                // The actual admin token we got from the backend login
+                const ADMIN_TOKEN = 'token_3_1759066505116_11cp8q';
+
+                // Store in localStorage
+                localStorage.setItem('userToken', ADMIN_TOKEN);
+
+                // Also store admin user data
+                const adminUserData = {
+                    id: 3,
+                    name: 'Admin',
+                    fullName: 'Admin Kumar',
+                    email: 'admin@gov.in',
+                    phone: '9876543212',
+                    role: 'admin',
+                    permanentRole: 'admin',
+                    employeeId: 'GOV2024001',
+                    department: 'Agriculture Department',
+                    designation: 'Assistant Commissioner',
+                    token: ADMIN_TOKEN
+                };
+
+                localStorage.setItem('userData', JSON.stringify(adminUserData));
+                localStorage.setItem('selectedRole', 'admin');
+
+                console.log('Admin token setup complete!');
+                console.log('Token:', ADMIN_TOKEN);
+                
+                // Show success message
+                document.getElementById('success').style.display = 'block';
+                
+                // Optional: Redirect to admin dashboard after 2 seconds
+                setTimeout(() => {
+                    if (confirm('Token setup complete! Would you like to go to the Admin Dashboard now?')) {
+                        window.open('http://localhost:8086/admin-dashboard', '_blank');
+                    }
+                }, 1000);
+
+            } catch (error) {
+                console.error('Error setting up admin token:', error);
+                alert('Error setting up admin token: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

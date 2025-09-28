@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sprout, Home, User, Mail, Lock, Shield, Phone, CreditCard, Building2, Badge } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import api from "@/services/api";
 
 const AuthForm = () => {
   const navigate = useNavigate();
@@ -36,64 +37,36 @@ const AuthForm = () => {
       const email = formData.get('email')?.toString() || '';
       const password = formData.get('password')?.toString() || '';
 
-      // Check if user is registered (simulate database check)
-      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      const existingUser = registeredUsers.find((user: any) => user.email === email && user.password === password);
-      
-      if (!existingUser) {
-        // User not found or wrong credentials
-        alert('Invalid credentials or user not registered. Please register first.');
+      if (!email || !password) {
+        alert('Please fill in all fields');
         return;
       }
 
-      // User found, proceed with login and assign selected role
-      const userData = {
-        name: existingUser.name,
-        fullName: existingUser.fullName,
-        email: existingUser.email,
-        phone: existingUser.phone || '',
-        role: role, // Use the selected role from role selection
-        permanentRole: role, // Make it permanent
-        roleAssignedAt: new Date().toISOString(),
-        isAuthenticated: true,
-        // Include role-specific verification data
-        ...(existingUser.district && { district: existingUser.district }),
-        ...(existingUser.aadhaar && { aadhaar: existingUser.aadhaar }),
-        ...(existingUser.address && { address: existingUser.address }),
-        ...(existingUser.employeeId && { employeeId: existingUser.employeeId }),
-        ...(existingUser.department && { department: existingUser.department }),
-        ...(existingUser.designation && { designation: existingUser.designation }),
-        ...(existingUser.verificationStatus && { verificationStatus: existingUser.verificationStatus }),
-        ...(existingUser.aadhaarVerified !== undefined && { aadhaarVerified: existingUser.aadhaarVerified }),
-        ...(existingUser.adminApproved !== undefined && { adminApproved: existingUser.adminApproved })
-      };
-
-      // Update the user in registeredUsers database with new role
-      const userIndex = registeredUsers.findIndex((user: any) => user.email === email);
-      if (userIndex !== -1) {
-        registeredUsers[userIndex].role = role;
-        registeredUsers[userIndex].permanentRole = role;
-        registeredUsers[userIndex].roleAssignedAt = userData.roleAssignedAt;
-        localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-      }
-
-      // Store user data in localStorage
-      localStorage.setItem('userData', JSON.stringify(userData));
+      // Use backend API for login
+      const result = await api.auth.login(email, password);
       
-      // Clear selected role from localStorage
-      localStorage.removeItem('selectedRole');
+      if (result.success) {
+        // Clear selected role from localStorage
+        localStorage.removeItem('selectedRole');
+        
+        // Update user role to match selected role
+        const userData = result.user;
+        userData.role = role;
+        userData.permanentRole = role;
+        localStorage.setItem('userData', JSON.stringify(userData));
 
-      // Navigate to appropriate dashboard based on selected role
-      if (role === 'farmer') {
-        navigate('/farmer-dashboard');
-      } else if (role === 'landowner') {
-        navigate('/landowner-dashboard');
-      } else if (role === 'admin') {
-        navigate('/admin-dashboard');
+        // Navigate to appropriate dashboard based on selected role
+        if (role === 'farmer') {
+          navigate('/farmer-dashboard');
+        } else if (role === 'landowner') {
+          navigate('/landowner-dashboard');
+        } else if (role === 'admin') {
+          navigate('/admin-dashboard');
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
-      alert('Login failed. Please try again.');
+      alert(error.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -150,74 +123,58 @@ const AuthForm = () => {
         };
       }
 
-      // Check if user already exists
-      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      const existingUser = registeredUsers.find((user: any) => user.email === email);
-      
-      if (existingUser) {
-        alert('User with this email already exists. Please login instead.');
-        return;
-      }
-
-      // Create new user data with selected role and verification data
-      const newUser = {
-        name: firstName,
-        fullName,
-        email,
-        phone,
-        password, // In production, this should be hashed!
-        role: role,
-        permanentRole: role,
-        roleAssignedAt: new Date().toISOString(),
-        registeredAt: new Date().toISOString(),
-        ...roleSpecificData
-      };
-
-      // Add to registered users database
-      registeredUsers.push(newUser);
-      localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-
-      // Set current user data for session
+      // Prepare user data for backend API
       const userData = {
-        name: firstName,
         fullName,
         email,
         phone,
-        role: role,
-        permanentRole: role,
-        roleAssignedAt: newUser.roleAssignedAt,
-        isAuthenticated: true,
+        password,
+        role,
         ...roleSpecificData
       };
-      
-      localStorage.setItem('userData', JSON.stringify(userData));
-      
-      // Clear selected role from localStorage
-      localStorage.removeItem('selectedRole');
-      
-      // Show role-specific success message
-      let successMessage = 'Account created successfully!';
-      if (role === 'farmer') {
-        successMessage += ' Your Aadhaar verification is pending. You can explore lands after verification.';
-      } else if (role === 'landowner') {
-        successMessage += ' Your Aadhaar verification is pending. You can list lands after verification.';
-      } else if (role === 'admin') {
-        successMessage += ' Your account is pending approval from senior officials.';
-      }
-      
-      alert(successMessage);
 
-      // Navigate to appropriate dashboard based on role
-      if (role === 'farmer') {
-        navigate('/farmer-dashboard');
-      } else if (role === 'landowner') {
-        navigate('/landowner-dashboard');
-      } else if (role === 'admin') {
-        navigate('/admin-dashboard');
+      // Use backend API for registration
+      const result = await api.auth.register(userData);
+      
+      if (result.success) {
+        // Clear selected role from localStorage
+        localStorage.removeItem('selectedRole');
+        
+        // Show role-specific success message
+        let successMessage = 'Account created successfully!';
+        if (role === 'farmer') {
+          successMessage += ' Your Aadhaar verification is pending. You can explore lands after verification.';
+        } else if (role === 'landowner') {
+          successMessage += ' Your Aadhaar verification is pending. You can list lands after verification.';
+        } else if (role === 'admin') {
+          successMessage += ' Your account is pending approval from senior officials.';
+        }
+        
+        alert(successMessage);
+
+        // Navigate to appropriate dashboard based on role
+        if (role === 'farmer') {
+          navigate('/farmer-dashboard');
+        } else if (role === 'landowner') {
+          navigate('/landowner-dashboard');
+        } else if (role === 'admin') {
+          navigate('/admin-dashboard');
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration failed:', error);
-      alert('Registration failed. Please try again.');
+      
+      // More detailed error messages
+      let errorMessage = 'Registration failed. Please try again.';
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.name === 'TypeError' && error.message?.includes('fetch')) {
+        errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
+      } else if (error.name === 'NetworkError') {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }

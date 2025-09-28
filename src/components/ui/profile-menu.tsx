@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, Settings } from "lucide-react";
+import { User, LogOut, Settings, Shield, Tractor, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface ProfileMenuProps {
@@ -21,7 +21,10 @@ export function ProfileMenu({ userData }: ProfileMenuProps) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    // Clear all authentication data
     localStorage.removeItem('userData');
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('selectedRole');
     navigate('/');
     window.location.reload(); // Reload to update UI state
   };
@@ -31,6 +34,8 @@ export function ProfileMenu({ userData }: ProfileMenuProps) {
       navigate('/farmer-dashboard');
     } else if (userData.role === 'landowner') {
       navigate('/landowner-dashboard');
+    } else if (userData.role === 'admin') {
+      navigate('/admin-dashboard');
     }
   };
 
@@ -53,7 +58,13 @@ export function ProfileMenu({ userData }: ProfileMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleDashboard} className="cursor-pointer">
-          <User className="mr-2 h-4 w-4" />
+          {userData.role === 'admin' ? (
+            <Shield className="mr-2 h-4 w-4" />
+          ) : userData.role === 'farmer' ? (
+            <Tractor className="mr-2 h-4 w-4" />
+          ) : (
+            <Home className="mr-2 h-4 w-4" />
+          )}
           <span>Dashboard</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">

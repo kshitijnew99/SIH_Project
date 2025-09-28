@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Pages Diagnostic Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .button.success {
+            background-color: #2ecc71;
+        }
+        .button.danger {
+            background-color: #e74c3c;
+        }
+        .result {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .links {
+            margin: 20px 0;
+        }
+        .links a {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .links a:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Admin Pages Diagnostic Tool</h1>
+        
+        <div class="links">
+            <strong>Quick Navigation:</strong>
+            <a href="http://localhost:8086/admin-dashboard" target="_blank">Admin Dashboard</a>
+            <a href="http://localhost:8086/admin/issue-management" target="_blank">Issue Management</a>
+            <a href="http://localhost:8086/admin/policy-management" target="_blank">Policy Management</a>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="container">
+            <h2>1. Authentication Setup</h2>
+            <button class="button" onclick="setupToken()">Setup Admin Token</button>
+            <button class="button" onclick="checkToken()">Check Current Token</button>
+            <button class="button danger" onclick="clearToken()">Clear Token</button>
+            <div id="authResult" class="result"></div>
+        </div>
+
+        <div class="container">
+            <h2>2. Backend API Tests</h2>
+            <button class="button" onclick="testLogin()">Test Admin Login</button>
+            <button class="button" onclick="testIssuesAPI()">Test Issues API</button>
+            <button class="button" onclick="testPoliciesAPI()">Test Policies API</button>
+            <button class="button" onclick="testAllAPIs()">Test All Admin APIs</button>
+            <div id="apiResult" class="result"></div>
+        </div>
+
+        <div class="container">
+            <h2>3. Frontend Tests</h2>
+            <button class="button" onclick="testFrontendAuth()">Test Frontend Auth</button>
+            <button class="button" onclick="simulateAPICall()">Simulate Issue Page Call</button>
+            <button class="button" onclick="testCORS()">Test CORS</button>
+            <div id="frontendResult" class="result"></div>
+        </div>
+
+        <div class="container">
+            <h2>4. System Status</h2>
+            <button class="button" onclick="checkSystemStatus()">Check All Systems</button>
+            <div id="statusResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            element.textContent += logEntry;
+            element.scrollTop = element.scrollHeight;
+            
+            if (type === 'error') {
+                console.error(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        function clearLog(elementId) {
+            document.getElementById(elementId).textContent = '';
+        }
+
+        async function setupToken() {
+            clearLog('authResult');
+            try {
+                log('authResult', '🔧 Setting up admin token...');
+                
+                // Get fresh token from backend
+                const loginResponse = await fetch('http://localhost:5001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@gov.in',
+                        password: 'admin123'
+                    })
+                });
+
+                const loginData = await loginResponse.json();
+                
+                if (loginData.success) {
+                    currentToken = loginData.token;
+                    
+                    // Store in localStorage
+                    localStorage.setItem('userToken', currentToken);
+                    localStorage.setItem('userData', JSON.stringify(loginData.user));
+                    localStorage.setItem('selectedRole', 'admin');
+                    
+                    log('authResult', `✅ Token setup successful!`);
+                    log('authResult', `Token: ${currentToken}`);
+                    log('authResult', `User: ${loginData.user.fullName} (${loginData.user.role})`);
+                } else {
+                    throw new Error(loginData.message || 'Login failed');
+                }
+                
+            } catch (error) {
+                log('authResult', `❌ Error setting up token: ${error.message}`, 'error');
+            }
+        }
+
+        function checkToken() {
+            clearLog('authResult');
+            const token = localStorage.getItem('userToken');
+            const userData = localStorage.getItem('userData');
+            
+            if (token) {
+                log('authResult', `✅ Token found: ${token}`);
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    log('authResult', `User: ${user.fullName || user.name} (${user.role})`);
+                }
+            } else {
+                log('authResult', '❌ No token found in localStorage');
+            }
+        }
+
+        function clearToken() {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userData');
+            localStorage.removeItem('selectedRole');
+            clearLog('authResult');
+            log('authResult', '🗑️ Token cleared from localStorage');
+        }
+
+        async function testLogin() {
+            clearLog('apiResult');
+            try {
+                log('apiResult', '🔐 Testing admin login...');
+                
+                const response = await fetch('http://localhost:5001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@gov.in',
+                        password: 'admin123'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    log('apiResult', `✅ Login successful!`);
+                    log('apiResult', `Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    log('apiResult', `❌ Login failed: ${data.message}`);
+                }
+            } catch (error) {
+                log('apiResult', `❌ Login error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testIssuesAPI() {
+            clearLog('apiResult');
+            const token = localStorage.getItem('userToken');
+            
+            if (!token) {
+                log('apiResult', '❌ No token found. Please setup token first.');
+                return;
+            }
+            
+            try {
+                log('apiResult', '📋 Testing Issues API...');
+                
+                const response = await fetch('http://localhost:5001/api/admin/issues', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    log('apiResult', `✅ Issues API working!`);
+                    log('apiResult', `Found ${data.issues?.length || 0} issues`);
+                    log('apiResult', `Sample data: ${JSON.stringify(data.issues?.slice(0, 2), null, 2)}`);
+                } else {
+                    log('apiResult', `❌ Issues API failed: ${data.message}`);
+                }
+            } catch (error) {
+                log('apiResult', `❌ Issues API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPoliciesAPI() {
+            clearLog('apiResult');
+            const token = localStorage.getItem('userToken');
+            
+            if (!token) {
+                log('apiResult', '❌ No token found. Please setup token first.');
+                return;
+            }
+            
+            try {
+                log('apiResult', '📜 Testing Policies API...');
+                
+                const response = await fetch('http://localhost:5001/api/admin/policies', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    log('apiResult', `✅ Policies API working!`);
+                    log('apiResult', `Found ${data.policies?.length || 0} policies`);
+                    log('apiResult', `Sample data: ${JSON.stringify(data.policies?.slice(0, 2), null, 2)}`);
+                } else {
+                    log('apiResult', `❌ Policies API failed: ${data.message}`);
+                }
+            } catch (error) {
+                log('apiResult', `❌ Policies API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAllAPIs() {
+            await testLogin();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testIssuesAPI();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testPoliciesAPI();
+        }
+
+        function testFrontendAuth() {
+            clearLog('frontendResult');
+            log('frontendResult', '🌐 Testing frontend authentication setup...');
+            
+            const token = localStorage.getItem('userToken');
+            const userData = localStorage.getItem('userData');
+            const selectedRole = localStorage.getItem('selectedRole');
+            
+            log('frontendResult', `Token: ${token ? '✅ Present' : '❌ Missing'}`);
+            log('frontendResult', `User Data: ${userData ? '✅ Present' : '❌ Missing'}`);
+            log('frontendResult', `Selected Role: ${selectedRole || '❌ Missing'}`);
+            
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    log('frontendResult', `User Role: ${user.role}`);
+                    log('frontendResult', `Admin Status: ${user.role === 'admin' ? '✅ Admin' : '❌ Not Admin'}`);
+                } catch (error) {
+                    log('frontendResult', `❌ Invalid user data: ${error.message}`);
+                }
+            }
+        }
+
+        async function simulateAPICall() {
+            clearLog('frontendResult');
+            log('frontendResult', '🎭 Simulating Issue Management page API call...');
+            
+            const token = localStorage.getItem('userToken');
+            if (!token) {
+                log('frontendResult', '❌ No token - this is why the page fails!');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/admin/issues', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('frontendResult', '✅ API call successful - Issue page should work!');
+                    log('frontendResult', `Data: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    log('frontendResult', `❌ API call failed with status: ${response.status}`);
+                    const errorText = await response.text();
+                    log('frontendResult', `Error: ${errorText}`);
+                }
+            } catch (error) {
+                log('frontendResult', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCORS() {
+            clearLog('frontendResult');
+            log('frontendResult', '🌍 Testing CORS configuration...');
+            
+            try {
+                const response = await fetch('http://localhost:5001/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    log('frontendResult', '✅ CORS working - backend accessible from frontend');
+                    const data = await response.json();
+                    log('frontendResult', `Health check: ${data.message}`);
+                } else {
+                    log('frontendResult', `❌ CORS issue - status: ${response.status}`);
+                }
+            } catch (error) {
+                log('frontendResult', `❌ CORS error: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkSystemStatus() {
+            clearLog('statusResult');
+            log('statusResult', '🔍 Checking system status...');
+            
+            // Check backend
+            try {
+                const healthResponse = await fetch('http://localhost:5001/health');
+                if (healthResponse.ok) {
+                    log('statusResult', '✅ Backend server: Running');
+                } else {
+                    log('statusResult', '❌ Backend server: Error');
+                }
+            } catch (error) {
+                log('statusResult', '❌ Backend server: Not accessible');
+            }
+            
+            // Check frontend
+            try {
+                const frontendResponse = await fetch('http://localhost:8086');
+                if (frontendResponse.ok) {
+                    log('statusResult', '✅ Frontend server: Running');
+                } else {
+                    log('statusResult', '❌ Frontend server: Error');
+                }
+            } catch (error) {
+                log('statusResult', '❌ Frontend server: Not accessible');
+            }
+            
+            // Check localStorage
+            const token = localStorage.getItem('userToken');
+            const userData = localStorage.getItem('userData');
+            
+            log('statusResult', `✅ Browser localStorage: ${token ? 'Token present' : 'No token'}`);
+            log('statusResult', `✅ User data: ${userData ? 'Present' : 'Missing'}`);
+            
+            log('statusResult', '\n🔧 Recommended Action:');
+            if (!token) {
+                log('statusResult', '1. Click "Setup Admin Token" to fix authentication');
+                log('statusResult', '2. Then try accessing the Issue/Policy pages');
+            } else {
+                log('statusResult', '1. System looks good - try accessing the admin pages');
+                log('statusResult', '2. If still having issues, check browser console for errors');
+            }
+        }
+
+        // Auto-check status on page load
+        window.addEventListener('load', () => {
+            setTimeout(checkSystemStatus, 1000);
+        });
+    </script>
+</body>
+</html>

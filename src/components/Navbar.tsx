@@ -9,12 +9,39 @@ const Navbar = () => {
   const [userData, setUserData] = useState<{ name: string; role: string } | null>(null);
 
   useEffect(() => {
-    const storedData = localStorage.getItem('userData');
-    if (storedData) {
-      const parsedData = JSON.parse(storedData);
-      setUserData(parsedData);
-    }
-  }, []);
+    const checkAuthState = () => {
+      const storedData = localStorage.getItem('userData');
+      const token = localStorage.getItem('userToken');
+      if (storedData && token) {
+        try {
+          const parsedData = JSON.parse(storedData);
+          // Only update if data has changed
+          if (!userData || userData.name !== parsedData.name || userData.role !== parsedData.role) {
+            setUserData(parsedData);
+          }
+        } catch (error) {
+          console.error('Error parsing userData:', error);
+          // Clear invalid data
+          localStorage.removeItem('userData');
+          localStorage.removeItem('userToken');
+          setUserData(null);
+        }
+      } else {
+        // No valid auth data, clear user state
+        if (userData) {
+          setUserData(null);
+        }
+      }
+    };
+
+    // Initial check
+    checkAuthState();
+
+    // Set up periodic check for auth state changes
+    const interval = setInterval(checkAuthState, 1000);
+
+    return () => clearInterval(interval);
+  }, [userData]);
 
   const navLinks = [
     { name: "Home", path: "/" },
