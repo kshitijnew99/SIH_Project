@@ -4,12 +4,74 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
+
+// Initialize Gemini AI
+console.log('🔑 GEMINI_API_KEY loaded:', process.env.GEMINI_API_KEY ? '✅ Yes' : '❌ No');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyDxJ8VxJ1X8kj7YxK9mF2L3nN4oO5pP6qQ');
+const geminiModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+// Fallback function for basic responses
+const getBasicResponse = (message) => {
+  // Convert to lowercase for better matching
+  const msg = message.toLowerCase();
+  
+  // Check for your specific question first
+  if (msg.includes('aapka platform hamari kaise sahayata kar sakta hai') || 
+      msg.includes('aapka platform hamari kaise sahayata kar sakta hai') ||
+      msg.includes('aapka platform kaise hamari sahayata kar sakta hai')) {
+    return '🙏 नमस्ते! मैं किसानकनेक्ट AI सहायक हूँ। हमारा प्लेटफॉर्म आपकी निम्नलिखित तरीकों से सहायता कर सकता है:\n\n🌾 **कृषि भूमि खोजना**: \n- सत्यापित भूमि की सूची देखें\n- मिट्टी के प्रकार और पानी की उपलब्धता की जानकारी\n\n📄 **कानूनी समझौते**: \n- भूमि पट्टे के लिए डिजिटल अनुबंध\n- किसान विवरण और हस्ताक्षर सुविधा\n\n💰 **बाज़ार मूल्य**: \n- फसलों के वर्तमान दाम\n- बाज़ार की जानकारी और रुझान\n\n🏛️ **सरकारी योजनाएं**: \n- सब्सिडी और सहायता कार्यक्रम\n- कृषि योजनाओं की पूरी जानकारी\n\nआप किस विषय में सहायता चाहते हैं?';
+  }
+  // Check for other platform help queries in Hindi/English
+  else if (
+    // Hindi variations
+    (msg.includes('platform') && msg.includes('sahayata')) ||
+    (msg.includes('platform') && msg.includes('madad')) ||
+    (msg.includes('aapka') && msg.includes('platform') && msg.includes('kaise')) ||
+    (msg.includes('platform') && (msg.includes('hamari') || msg.includes('humari'))) ||
+    // English variations
+    (msg.includes('platform') && msg.includes('help')) ||
+    msg.includes('tell me something about this platform') ||
+    msg.includes('what can your platform do') ||
+    msg.includes('how can platform help')
+  ) {
+    return '🙏 नमस्ते! मैं किसानकनेक्ट AI सहायक हूँ। हमारा प्लेटफॉर्म आपकी निम्नलिखित तरीकों से सहायता कर सकता है:\n\n🌾 **कृषि भूमि खोजना**: \n- सत्यापित भूमि की सूची देखें\n- मिट्टी के प्रकार और पानी की उपलब्धता की जानकारी\n\n📄 **कानूनी समझौते**: \n- भूमि पट्टे के लिए डिजिटल अनुबंध\n- किसान विवरण और हस्ताक्षर सुविधा\n\n💰 **बाज़ार मूल्य**: \n- फसलों के वर्तमान दाम\n- बाज़ार की जानकारी और रुझान\n\n🏛️ **सरकारी योजनाएं**: \n- सब्सिडी और सहायता कार्यक्रम\n- कृषि योजनाओं की पूरी जानकारी\n\nआप किस विषय में सहायता चाहते हैं?';
+  }
+  // Land related queries
+  else if (msg.includes('land') || msg.includes('bhumi') || msg.includes('जमीन')) {
+    return '🌾 I can help you find agricultural land! You can browse available lands on our Land page. We have verified listings with details about soil type, water availability, and pricing.';
+  } 
+  // Agreement related queries
+  else if (msg.includes('agreement') || msg.includes('contract') || msg.includes('समझौता')) {
+    return '📄 For land agreements, you can create legal contracts through our Make Agreement feature. This includes farmer details, terms, and digital signatures.';
+  } 
+  // Crop related queries
+  else if (msg.includes('crop') || msg.includes('fasal') || msg.includes('फसल')) {
+    return '🌱 For crop-related queries, I recommend checking our Government Schemes section for subsidies and support programs for different crops.';
+  } 
+  // Price/Market related queries
+  else if (msg.includes('price') || msg.includes('market') || msg.includes('बाजार') || msg.includes('दाम')) {
+    return '💰 Check our Market Prices section for real-time crop prices and market trends to make informed selling decisions.';
+  } 
+  // Greeting messages
+  else if (msg.includes('hello') || msg.includes('hi') || msg.includes('namaste') || msg.includes('नमस्ते')) {
+    return '🙏 Namaste! Welcome to KisanConnect. I\'m here to help you with land leasing, agreements, market prices, and farming guidance. How can I assist you today?';
+  } 
+  // Default response
+  else {
+    return '🤖 Thank you for your question! I can help you with:\n\n🌾 Finding agricultural land\n📋 Creating agreements\n💰 Market prices\n🏛️ Government schemes\n\nPlease let me know what specific information you need!';
+  }
+};
 
 // Initialize Socket.IO
 const io = new SocketIOServer(httpServer, {
@@ -1754,22 +1816,49 @@ io.on('connection', (socket) => {
     console.log('📨 Received chat message:', data);
     
     try {
-      // Simple chatbot responses for agricultural queries
-      const message = data.message.toLowerCase();
+      const userMessage = data.message.trim();
       let response = '';
       
-      if (message.includes('land') || message.includes('bhumi') || message.includes('जमीन')) {
-        response = '🌾 I can help you find agricultural land! You can browse available lands on our Land page. We have verified listings with details about soil type, water availability, and pricing.';
-      } else if (message.includes('agreement') || message.includes('contract') || message.includes('समझौता')) {
-        response = '📄 For land agreements, you can create legal contracts through our Make Agreement feature. This includes farmer details, terms, and digital signatures.';
-      } else if (message.includes('crop') || message.includes('fasal') || message.includes('फसल')) {
-        response = '🌱 For crop-related queries, I recommend checking our Government Schemes section for subsidies and support programs for different crops.';
-      } else if (message.includes('price') || message.includes('market') || message.includes('बाजार') || message.includes('दाम')) {
-        response = '💰 Check our Market Prices section for real-time crop prices and market trends to make informed selling decisions.';
-      } else if (message.includes('hello') || message.includes('hi') || message.includes('namaste') || message.includes('नमस्ते')) {
-        response = '🙏 Namaste! Welcome to KisanConnect. I\'m here to help you with land leasing, agreements, market prices, and farming guidance. How can I assist you today?';
+      // Enhanced AI-powered chatbot using Gemini
+      console.log('🔍 Checking AI availability:', {
+        hasGeminiModel: !!geminiModel,
+        hasApiKey: !!process.env.GEMINI_API_KEY,
+        apiKeyPreview: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'Not found'
+      });
+      
+      if (geminiModel && process.env.GEMINI_API_KEY) {
+        try {
+          console.log('🚀 Attempting Gemini AI generation for message:', userMessage);
+          
+          const prompt = `You are KisanConnect AI Assistant, an expert agricultural advisor for Indian farmers. 
+          
+Context: KisanConnect is a platform that helps small-scale farmers in India with:
+- Finding and leasing agricultural land
+- Creating legal agreements for land use
+- Getting real-time market prices for crops
+- Accessing government schemes and subsidies
+- Connecting with other farmers and land owners
+
+User Question: "${userMessage}"
+
+Please provide a helpful, accurate, and contextual response in a friendly tone. Use appropriate emojis. If the question is in Hindi, respond in Hindi. If it's about specific KisanConnect features, guide them to the relevant section of our platform. Keep responses concise but informative (2-3 sentences max).
+
+Response format: Start with an appropriate emoji, provide the helpful information, and if relevant, mention which section of KisanConnect can help them.`;
+
+          const result = await geminiModel.generateContent(prompt);
+          const aiResponse = result.response;
+          response = aiResponse.text();
+          
+          console.log('🤖 AI Response generated successfully:', response.substring(0, 100) + '...');
+        } catch (aiError) {
+          console.error('� Gemini AI Error:', aiError);
+          // Fallback to basic responses if AI fails
+          response = getBasicResponse(userMessage.toLowerCase());
+        }
       } else {
-        response = '🤖 Thank you for your question! I can help you with:\n\n🌾 Finding agricultural land\n📋 Creating agreements\n💰 Market prices\n🏛️ Government schemes\n\nPlease let me know what specific information you need!';
+        console.log('⚠️ Using hardcoded responses - AI not available');
+        // Use basic responses if no AI configured
+        response = getBasicResponse(userMessage.toLowerCase());
       }
       
       // Send response back to client
@@ -1802,6 +1891,7 @@ const server = httpServer.listen(PORT, () => {
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
   console.log(`🚀 API Base URL: http://localhost:${PORT}/api`);
   console.log(`🤖 Socket.IO server ready for chatbot connections`);
+  console.log(`🧠 AI Chatbot: ${process.env.GEMINI_API_KEY ? '✅ Gemini AI Enabled' : '⚠️ Basic Responses (No API Key)'}`);
   console.log(`📊 Current time: ${new Date().toISOString()}`);
 });
 
