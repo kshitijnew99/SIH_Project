@@ -18,6 +18,7 @@ import {
   WifiOff,
   Paperclip,
   Mic,
+  RefreshCw,
   MicOff,
   Upload,
   FileText
@@ -96,6 +97,15 @@ const FloatingChatbot: React.FC = () => {
       timestamp: new Date()
     }
   ]);
+  
+  // Helper function to validate messages
+  const validateMessage = (message: any): message is Message => {
+    return message && 
+           typeof message.id === 'string' && 
+           typeof message.role === 'string' &&
+           (message.content === null || message.content === undefined || typeof message.content === 'string') &&
+           message.timestamp instanceof Date;
+  };
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -162,16 +172,36 @@ const FloatingChatbot: React.FC = () => {
     // Message event handlers
     newSocket.on('bot-message', (data) => {
       console.log('🤖 Received bot message:', data);
-      const botMessage: Message = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: data.message,
-        timestamp: new Date(data.timestamp),
-        source: data.source
-      };
-      
-      setMessages(prev => [...prev, botMessage]);
-      setIsLoading(false);
+      try {
+        const botMessage: Message = {
+          id: data?.id || Date.now().toString(),
+          role: 'assistant',
+          content: data?.content || data?.message || 'No response received',
+          timestamp: data?.timestamp ? new Date(data.timestamp) : new Date(),
+          source: data?.source
+        };
+        
+        // Only add message if it has valid content
+        if (botMessage.content && botMessage.content.trim()) {
+          setMessages(prev => [...prev, botMessage]);
+        } else {
+          console.warn('Received bot message with no content:', data);
+          // Add fallback message
+          setMessages(prev => [...prev, {
+            ...botMessage,
+            content: 'I apologize, but I couldn\'t generate a proper response. Please try again.'
+          }]);
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error processing bot message:', error);
+        setIsLoading(false);
+        toast({
+          title: "Message Error",
+          description: "Failed to display bot response",
+          variant: "destructive"
+        });
+      }
     });
 
     newSocket.on('connection-test-result', (data) => {
@@ -505,14 +535,44 @@ const FloatingChatbot: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  const formatMessageContent = (content: string) => {
-    // Split by newlines and render each part
-    return content.split('\n').map((line, index) => (
-      <React.Fragment key={index}>
-        {line}
-        {index < content.split('\n').length - 1 && <br />}
-      </React.Fragment>
-    ));
+  const formatMessageContent = (content: string | undefined | null) => {
+    try {
+      // Handle undefined, null, or empty content
+      if (!content || typeof content !== 'string') {
+        return <span>No content</span>;
+      }
+      
+      // Ensure content is a string and handle edge cases
+      const safeContent = content?.toString()?.trim() || '';
+      if (!safeContent) {
+        return <span>No content</span>;
+      }
+      
+      // Split by newlines and render each part
+      const lines = safeContent.split('\n');
+      return lines.map((line, index) => (
+        <React.Fragment key={index}>
+          {line}
+          {index < lines.length - 1 && <br />}
+        </React.Fragment>
+      ));
+    } catch (error) {
+      console.error('Error formatting message content:', error);
+      return <span>Error displaying message</span>;
+    }
+  };
+
+  const clearChat = () => {
+    setMessages([
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: "🌾 Hello! I'm your KisanConnect AI assistant. I can help you with:\n\n📝 Text queries (Hindi/English)\n🎤 Voice messages (बोलकर पूछें)\n📸 Image analysis (crop diseases, soil)\n📄 Document analysis (soil reports)\n\nHow can I help you today?",
+        timestamp: new Date()
+      }
+    ]);
+    setInputMessage('');
+    setIsLoading(false);
   };
 
   if (!isOpen) {
@@ -548,6 +608,15 @@ const FloatingChatbot: React.FC = () => {
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-300' : 'bg-red-300'}`} />
             </div>
             <div className="flex items-center space-x-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearChat}
+                className="text-white hover:bg-green-800 p-1 h-8 w-8"
+                title="Clear Chat"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -612,7 +681,10 @@ const FloatingChatbot: React.FC = () => {
                         )}
                         <div className="flex-1">
                           <p className="text-sm leading-relaxed">
-                            {formatMessageContent(message.content)}
+                            {(() => {
+                              console.log('Rendering message:', message?.id, 'content:', typeof message?.content, message?.content);
+                              return formatMessageContent(message?.content);
+                            })()}
                           </p>
                           
                           {/* File attachment indicator */}

@@ -1120,6 +1120,66 @@ app.post('/api/admin/issues/:id/update', (req, res) => {
   }
 });
 
+// Submit Contact Support Issue (Public endpoint)
+app.post('/api/contact-support', (req, res) => {
+  try {
+    const { 
+      fullName, 
+      emailAddress, 
+      phoneNumber, 
+      category, 
+      inquiryType, 
+      priority, 
+      subject, 
+      message 
+    } = req.body;
+
+    // Validate required fields
+    if (!fullName || !emailAddress || !category || !inquiryType || !priority || !subject || !message) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'All required fields must be provided' 
+      });
+    }
+
+    // Create new issue from contact support form
+    const newIssue = {
+      id: Date.now(), // Simple ID generation
+      title: subject,
+      description: message,
+      category: category,
+      priority: priority.toLowerCase(),
+      status: 'pending',
+      type: inquiryType,
+      reportedBy: {
+        name: fullName,
+        email: emailAddress,
+        phone: phoneNumber || 'Not provided'
+      },
+      reportedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      resolution: null,
+      resolvedAt: null,
+      resolvedBy: null,
+      updatedBy: null
+    };
+
+    // Add to issues array
+    issues.push(newIssue);
+
+    console.log(`📞 New contact support issue created: ${subject} by ${fullName}`);
+
+    res.json({ 
+      success: true, 
+      message: 'Your query has been submitted successfully. Our team will get back to you soon.',
+      issueId: newIssue.id
+    });
+  } catch (error) {
+    console.error('Submit contact support error:', error);
+    res.status(500).json({ success: false, message: 'Server error while submitting your query' });
+  }
+});
+
 // Policy Management Endpoints
 app.get('/api/admin/policies', (req, res) => {
   try {

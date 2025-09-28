@@ -18,7 +18,8 @@ import {
   Eye,
   Mail,
   User,
-  Calendar
+  Calendar,
+  Phone
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -406,18 +407,25 @@ const IssueManagement = () => {
                         <div className="flex items-center space-x-6 text-sm text-muted-foreground">
                           <div className="flex items-center space-x-2">
                             <User className="h-4 w-4" />
-                            <span>Reported by: {issue.reporterName || 'Anonymous'} ({issue.reporterEmail || 'N/A'})</span>
+                            <span>Reported by: {issue.reportedBy?.name || issue.reporterName || 'Anonymous'}</span>
                           </div>
                           
                           <div className="flex items-center space-x-2">
                             <Calendar className="h-4 w-4" />
-                            <span>Created: {new Date(issue.createdAt).toLocaleDateString()}</span>
+                            <span>Created: {new Date(issue.reportedAt || issue.createdAt).toLocaleDateString()}</span>
                           </div>
                           
                           <div className="flex items-center space-x-2">
                             <Mail className="h-4 w-4" />
-                            <span>Contact: {issue.reporterEmail || 'N/A'}</span>
+                            <span>Contact: {issue.reportedBy?.email || issue.reporterEmail || 'N/A'}</span>
                           </div>
+                          
+                          {issue.reportedBy?.phone && issue.reportedBy.phone !== 'Not provided' && (
+                            <div className="flex items-center space-x-2">
+                              <Phone className="h-4 w-4" />
+                              <span>Phone: {issue.reportedBy.phone}</span>
+                            </div>
+                          )}
                         </div>
                         
                         {/* Admin Response (if any) */}
@@ -511,16 +519,24 @@ const IssueManagement = () => {
                 </div>
                 <div>
                   <h4 className="font-medium mb-2">Reported Date</h4>
-                  <p className="text-muted-foreground">{new Date(selectedIssue.createdAt).toLocaleDateString()}</p>
+                  <p className="text-muted-foreground">{new Date(selectedIssue.reportedAt || selectedIssue.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
               
               <div>
                 <h4 className="font-medium mb-2">Reported By</h4>
                 <div className="bg-secondary/50 rounded-lg p-3">
-                  <p><strong>Name:</strong> {selectedIssue.reporterName || 'Anonymous'}</p>
-                  <p><strong>Role:</strong> {selectedIssue.reporterRole || 'N/A'}</p>
-                  <p><strong>Contact:</strong> {selectedIssue.reporterEmail || 'N/A'}</p>
+                  <p><strong>Name:</strong> {selectedIssue.reportedBy?.name || selectedIssue.reporterName || 'Anonymous'}</p>
+                  <p><strong>Email:</strong> {selectedIssue.reportedBy?.email || selectedIssue.reporterEmail || 'N/A'}</p>
+                  {selectedIssue.reportedBy?.phone && selectedIssue.reportedBy.phone !== 'Not provided' && (
+                    <p><strong>Phone:</strong> {selectedIssue.reportedBy.phone}</p>
+                  )}
+                  {selectedIssue.reporterRole && (
+                    <p><strong>Role:</strong> {selectedIssue.reporterRole}</p>
+                  )}
+                  {selectedIssue.type && (
+                    <p><strong>Inquiry Type:</strong> {selectedIssue.type}</p>
+                  )}
                 </div>
               </div>
               

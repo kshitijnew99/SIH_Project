@@ -46,30 +46,43 @@ const ContactSupport = () => {
     try {
       setIsSubmitting(true);
       
-      // Simulate API call - in real app, this would send to your backend
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "Message Sent Successfully! ✅",
-        description: "Our support team will get back to you within 24 hours.",
+      // Submit to backend API
+      const response = await fetch('http://localhost:5001/api/contact-support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-      
-      // Reset form
-      setFormData({
-        fullName: "",
-        emailAddress: "",
-        phoneNumber: "",
-        category: "",
-        inquiryType: "",
-        priority: "",
-        subject: "",
-        message: ""
-      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "Message Sent Successfully! ✅",
+          description: `Your query has been submitted (ID: ${data.issueId}). Our support team will get back to you within 24 hours.`,
+        });
+        
+        // Reset form
+        setFormData({
+          fullName: "",
+          emailAddress: "",
+          phoneNumber: "",
+          category: "",
+          inquiryType: "",
+          priority: "",
+          subject: "",
+          message: ""
+        });
+      } else {
+        throw new Error(data.message || 'Failed to submit query');
+      }
       
     } catch (error) {
+      console.error('Contact support submission error:', error);
       toast({
         title: "Failed to Send Message",
-        description: "Please try again later or contact us directly.",
+        description: error.message || "Please try again later or contact us directly.",
         variant: "destructive",
       });
     } finally {
