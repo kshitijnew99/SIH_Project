@@ -28,6 +28,7 @@ import AgreementManagement from "./pages/admin/AgreementManagement";
 import NotificationSystem from "./pages/admin/NotificationSystem";
 import IssueManagement from "./pages/admin/IssueManagement";
 import PolicyManagement from "./pages/admin/PolicyManagement";
+import MakeAgreement from "./pages/MakeAgreement";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
           <Route path="/schemes" element={<SchemesPage />} />
           <Route path="/contact-support" element={<ContactSupport />} />
           <Route path="/test-add-land" element={<AddNewLandTest />} />
+          <Route path="/make-agreement" element={<MakeAgreement />} />
           
           {/* Admin Management Routes */}
           <Route path="/admin/verification-management" element={<VerificationManagement />} />

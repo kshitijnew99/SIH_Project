@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1201,13 +1202,20 @@ const Land = () => {
                         </div>
                       )}
                     </div>
-                    <div className="flex gap-2">
-                      <Button className="flex-1" variant="outline">
-                        View Details
-                      </Button>
-                      <Button className="flex-1" variant="hero">
-                        Contact Owner
-                      </Button>
+                    <div className="space-y-6">
+                      <div className="flex gap-3">
+                        <Button className="flex-1" variant="outline">
+                          View Details
+                        </Button>
+                        <Button className="flex-1" variant="secondary">
+                          Contact Owner
+                        </Button>
+                      </div>
+                      <Link to={`/make-agreement?landId=${land.id}`} className="w-full">
+                        <Button className="w-full" variant="hero">
+                          Make Agreement
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </CardContent>

@@ -1260,31 +1260,87 @@ app.post('/api/verification/submit', (req, res) => {
 // Create agreement (for farmers/landowners to create agreements)
 app.post('/api/agreements/create', (req, res) => {
   try {
-    const { farmerId, landownerId, landId, terms, duration, paymentTerms } = req.body;
+    const {
+      // Farmer Information
+      farmerName, farmerPhone, farmerEmail, farmerAddress, farmerAadhaar, farmerExperience,
+      // Landowner Information  
+      landownerName, landownerPhone, landownerEmail, landownerAddress, landownerAadhaar,
+      // Land Information
+      landLocation, landArea, landType, soilType, waterSource, landValue,
+      // Agreement Information
+      agreementType, cropType, duration, startDate, endDate, sharePercentage, rentAmount, advanceAmount, terms, responsibilities,
+      // Legal Information
+      witnessName, witnessPhone, farmerSignature, landownerSignature,
+      // Legacy fields for compatibility
+      farmerId, landownerId, landId, paymentTerms
+    } = req.body;
     
-    const farmer = getUserById(farmerId);
-    const landowner = getUserById(landownerId);
+    // If farmerId/landownerId provided, get user details
+    let farmer = null;
+    let landowner = null;
     
-    if (!farmer || !landowner) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid farmer or landowner ID'
-      });
+    if (farmerId) {
+      farmer = getUserById(farmerId);
+    }
+    if (landownerId) {
+      landowner = getUserById(landownerId);
     }
     
     const agreement = {
       id: agreementIdCounter++,
-      farmerId: parseInt(farmerId),
-      landownerId: parseInt(landownerId),
+      // Core IDs (if provided)
+      farmerId: farmerId ? parseInt(farmerId) : null,
+      landownerId: landownerId ? parseInt(landownerId) : null,
       landId: landId ? parseInt(landId) : null,
+      
+      // Farmer Information
+      farmerName: farmerName || (farmer && (farmer.name || farmer.fullName)) || 'Unknown',
+      farmerPhone: farmerPhone || (farmer && farmer.phone) || '',
+      farmerEmail: farmerEmail || (farmer && farmer.email) || '',
+      farmerAddress: farmerAddress || '',
+      farmerAadhaar: farmerAadhaar || '',
+      farmerExperience: farmerExperience || '',
+      
+      // Landowner Information
+      landownerName: landownerName || (landowner && (landowner.name || landowner.fullName)) || 'Unknown',
+      landownerPhone: landownerPhone || (landowner && landowner.phone) || '',
+      landownerEmail: landownerEmail || (landowner && landowner.email) || '',
+      landownerAddress: landownerAddress || '',
+      landownerAadhaar: landownerAadhaar || '',
+      
+      // Land Information
+      landLocation: landLocation || 'Location TBD',
+      landArea: landArea || '',
+      landType: landType || '',
+      soilType: soilType || '',
+      waterSource: waterSource || '',
+      landValue: landValue || '',
+      
+      // Agreement Information
+      agreementType: agreementType || 'crop-sharing',
+      cropType: cropType || '',
+      duration: duration || '',
+      startDate: startDate || '',
+      endDate: endDate || '',
+      sharePercentage: sharePercentage || '',
+      rentAmount: rentAmount || '',
+      advanceAmount: advanceAmount || '',
+      terms: terms || '',
+      responsibilities: responsibilities || '',
+      
+      // Legacy fields
+      paymentTerms: paymentTerms || '',
+      
+      // Legal Information
+      witnessName: witnessName || '',
+      witnessPhone: witnessPhone || '',
+      farmerSignature: farmerSignature || '',
+      landownerSignature: landownerSignature || '',
+      
+      // Status and timestamps
       status: 'pending',
-      terms,
-      duration,
-      paymentTerms,
       createdAt: new Date().toISOString(),
-      farmerName: farmer.name || farmer.fullName,
-      landowner: landowner.name || landowner.fullName,
-      landLocation: 'Location TBD'
+      updatedAt: new Date().toISOString()
     };
     
     agreements.push(agreement);
