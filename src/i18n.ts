@@ -9,8 +9,9 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    debug: false,
+    debug: true,
     fallbackLng: 'en',
+    lng: 'en', // Set default language explicitly
     interpolation: {
       escapeValue: false,
     },
@@ -26,6 +27,12 @@ i18n
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
     },
+    react: {
+      useSuspense: false, // Disable suspense to prevent loading issues
+    },
+  })
+  .catch((error) => {
+    console.error('i18n initialization failed:', error);
   });
 
 export default i18n;

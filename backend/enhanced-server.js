@@ -2,11 +2,22 @@ import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+const httpServer = createServer(app);
+
+// Initialize Socket.IO
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: ['http://localhost:8086', 'http://localhost:8087', 'http://localhost:8088', 'http://localhost:3000', 'http://localhost:5173'],
+    credentials: true
+  }
+});
 
 // Middleware
 app.use(cors({
@@ -1674,11 +1685,63 @@ if (users.length === 0) {
 // Start server
 const PORT = process.env.PORT || 5001;
 
-const server = app.listen(PORT, () => {
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log(`👤 Client connected: ${socket.id}`);
+  
+  // Handle chat messages
+  socket.on('chat-message', async (data) => {
+    console.log('📨 Received chat message:', data);
+    
+    try {
+      // Simple chatbot responses for agricultural queries
+      const message = data.message.toLowerCase();
+      let response = '';
+      
+      if (message.includes('land') || message.includes('bhumi') || message.includes('जमीन')) {
+        response = '🌾 I can help you find agricultural land! You can browse available lands on our Land page. We have verified listings with details about soil type, water availability, and pricing.';
+      } else if (message.includes('agreement') || message.includes('contract') || message.includes('समझौता')) {
+        response = '📄 For land agreements, you can create legal contracts through our Make Agreement feature. This includes farmer details, terms, and digital signatures.';
+      } else if (message.includes('crop') || message.includes('fasal') || message.includes('फसल')) {
+        response = '🌱 For crop-related queries, I recommend checking our Government Schemes section for subsidies and support programs for different crops.';
+      } else if (message.includes('price') || message.includes('market') || message.includes('बाजार') || message.includes('दाम')) {
+        response = '💰 Check our Market Prices section for real-time crop prices and market trends to make informed selling decisions.';
+      } else if (message.includes('hello') || message.includes('hi') || message.includes('namaste') || message.includes('नमस्ते')) {
+        response = '🙏 Namaste! Welcome to KisanConnect. I\'m here to help you with land leasing, agreements, market prices, and farming guidance. How can I assist you today?';
+      } else {
+        response = '🤖 Thank you for your question! I can help you with:\n\n🌾 Finding agricultural land\n📋 Creating agreements\n💰 Market prices\n🏛️ Government schemes\n\nPlease let me know what specific information you need!';
+      }
+      
+      // Send response back to client
+      socket.emit('bot-message', {
+        id: Date.now().toString(),
+        content: response,
+        role: 'assistant',
+        timestamp: new Date()
+      });
+      
+    } catch (error) {
+      console.error('❌ Chat error:', error);
+      socket.emit('bot-message', {
+        id: Date.now().toString(),
+        content: '❌ Sorry, I encountered an error. Please try again later.',
+        role: 'assistant',
+        timestamp: new Date()
+      });
+    }
+  });
+  
+  socket.on('disconnect', () => {
+    console.log(`👋 Client disconnected: ${socket.id}`);
+  });
+});
+
+const server = httpServer.listen(PORT, () => {
   console.log(`🌱 KisanConnect Backend Server`);
   console.log(`📍 Server running on port ${PORT}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
   console.log(`🚀 API Base URL: http://localhost:${PORT}/api`);
+  console.log(`🤖 Socket.IO server ready for chatbot connections`);
   console.log(`📊 Current time: ${new Date().toISOString()}`);
 });
 

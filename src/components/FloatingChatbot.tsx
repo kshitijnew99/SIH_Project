@@ -109,7 +109,7 @@ const FloatingChatbot: React.FC = () => {
 
   // Initialize Socket.IO connection
   useEffect(() => {
-    const SERVER_URL = 'http://localhost:3001';
+    const SERVER_URL = 'http://localhost:5001';
     console.log('🔌 Connecting to Socket.IO server:', SERVER_URL);
     
     const newSocket = io(SERVER_URL, {

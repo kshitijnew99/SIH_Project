@@ -29,17 +29,21 @@ import NotificationSystem from "./pages/admin/NotificationSystem";
 import IssueManagement from "./pages/admin/IssueManagement";
 import PolicyManagement from "./pages/admin/PolicyManagement";
 import MakeAgreement from "./pages/MakeAgreement";
+import ErrorBoundary from "./components/ErrorBoundary";
+import TestPage from "./pages/TestPage";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/test" element={<TestPage />} />
           <Route path="/land" element={<Land />} />
           <Route path="/market" element={<Market />} />
           <Route path="/tools" element={<Tools />} />
@@ -75,6 +79,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
