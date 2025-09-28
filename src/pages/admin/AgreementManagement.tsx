@@ -13,7 +13,7 @@ import {
   ArrowLeft,
   Eye,
   Sprout,
-  DollarSign,
+  IndianRupee,
   FileText,
   Users
 } from "lucide-react";
@@ -284,7 +284,7 @@ const AgreementManagement = () => {
                         </>
                       ) : (
                         <>
-                          <DollarSign className="h-8 w-8 mx-auto text-green-600 mb-2" />
+                          <IndianRupee className="h-8 w-8 mx-auto text-green-600 mb-2" />
                           <p className="text-sm font-medium">₹{agreement.rentAmount?.toLocaleString()}</p>
                           <p className="text-xs text-muted-foreground">Monthly Rent</p>
                         </>

@@ -815,10 +815,11 @@ app.get('/api/admin/agreements', (req, res) => {
       
       return {
         ...agreement,
-        farmerName: farmer ? farmer.name : 'Unknown',
-        farmerEmail: farmer ? farmer.email : 'Unknown',
-        landownerName: landowner ? landowner.name : 'Unknown',
-        landownerEmail: landowner ? landowner.email : 'Unknown'
+        // Use stored name if available, otherwise try user lookup, finally fallback to 'Unknown'
+        farmerName: agreement.farmerName || (farmer ? farmer.name : 'Unknown'),
+        farmerEmail: agreement.farmerEmail || (farmer ? farmer.email : 'Unknown'),
+        landownerName: agreement.landownerName || (landowner ? landowner.name : 'Unknown'),
+        landownerEmail: agreement.landownerEmail || (landowner ? landowner.email : 'Unknown')
       };
     });
 
