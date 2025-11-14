@@ -109,20 +109,3 @@ If you prefer to use Google Maps API directly:
    ```
    VITE_GOOGLE_MAPS_API_KEY=your_google_api_key_here
    ```
-
-**Note:** Without a valid API key, the location picker will show manual coordinate input functionality.
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/518fa889-9c60-4e8d-b6bb-74deb62a6dfe) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
-=======
-# SIH_Project.
->>>>>>> d395d1bba92c17b092c05a84f2f1e0235072128d
