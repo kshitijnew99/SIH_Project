@@ -53,6 +53,7 @@ const Navbar = () => {
     { name: t("nav.equipment"), path: "/tools" },
     { name: t("nav.schemes"), path: "/schemes" },
     { name: t("nav.about"), path: "/about" },
+    { name: "🏦 Lender Portal", path: "/lender/dashboard", isNew: true },
   ];
 
   return (
@@ -72,7 +73,9 @@ const Navbar = () => {
               <Link
                 key={link.name}
                 to={link.path}
-                className="text-foreground/80 hover:text-primary transition-colors duration-200 font-medium"
+                className={`text-foreground/80 hover:text-primary transition-colors duration-200 font-medium ${
+                  link.isNew ? 'bg-green-100 text-green-700 px-3 py-1 rounded-full hover:bg-green-200' : ''
+                }`}
               >
                 {link.name}
               </Link>

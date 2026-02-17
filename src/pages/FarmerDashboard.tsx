@@ -246,7 +246,7 @@ const FarmerDashboard = () => {
             {/* Quick Actions */}
             <div>
               <h2 className="text-2xl font-semibold mb-6">Quick Actions</h2>
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-4 gap-4">
                 <Link to="/land">
                   <Card className="hover:shadow-md transition-shadow cursor-pointer">
                     <CardContent className="p-6 text-center">
@@ -276,6 +276,15 @@ const FarmerDashboard = () => {
                     </CardContent>
                   </Card>
                 </Link>
+                
+                <Card className="hover:shadow-md transition-shadow cursor-pointer bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                  <CardContent className="p-6 text-center">
+                    <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                    <h3 className="font-semibold text-green-900">Get Credit 🆕</h3>
+                    <p className="text-sm text-green-700">AI-powered loan assessment</p>
+                    <Badge className="mt-2 bg-green-600">Coming Soon</Badge>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>

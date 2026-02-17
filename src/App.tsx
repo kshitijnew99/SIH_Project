@@ -32,6 +32,8 @@ import AddOpportunity from "./pages/admin/AddOpportunity";
 import MakeAgreement from "./pages/MakeAgreement";
 import ErrorBoundary from "./components/ErrorBoundary";
 import TestPage from "./pages/TestPage";
+import LenderDashboard from "./pages/LenderDashboard";
+import LoanApplicationReview from "./pages/LoanApplicationReview";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +73,14 @@ const App = () => (
           <Route path="/admin/issue-management" element={<IssueManagement />} />
           <Route path="/admin/policy-management" element={<PolicyManagement />} />
           <Route path="/admin/add-opportunity" element={<AddOpportunity />} />
+          
+          {/* Lender/Credit Assessment Routes */}
+          <Route path="/lender/dashboard" element={<LenderDashboard />} />
+          <Route path="/lender/applications" element={<LenderDashboard />} />
+          <Route path="/lender/applications/:id" element={<LoanApplicationReview />} />
+          <Route path="/lender/portfolio" element={<LenderDashboard />} />
+          <Route path="/lender/analytics" element={<LenderDashboard />} />
+          <Route path="/lender/profile" element={<LenderDashboard />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

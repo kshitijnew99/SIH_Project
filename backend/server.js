@@ -34,6 +34,10 @@ const io = new Server(server, {
   cors: corsOptions
 });
 
+// In-memory storage for development
+let users = [];
+let userIdCounter = 1;
+
 // Agricultural knowledge base for fallback responses
 const agriculturalKnowledge = {
   crops: {
@@ -468,6 +472,121 @@ This will help me provide more targeted advice!`;
   });
 });
 
+// ==========================================
+// NEW CREDIT ASSESSMENT ROUTES
+// ==========================================
+// Note: Routes need to be converted to ES modules first
+// For now, we'll add a placeholder that shows these routes exist
+app.get('/api/credit-assessment/status', (req, res) => {
+  res.json({
+    status: 'available',
+    message: 'Credit Assessment Platform Routes',
+    routes: {
+      agriStack: '/api/agristack - Agri Stack Integration (9 endpoints)',
+      creditScore: '/api/credit-score - AI Credit Scoring (9 endpoints)',
+      lenderAuth: '/api/lender-auth - Lender Authentication (7 endpoints)',
+      loanApplications: '/api/loan-applications - Loan Management (10+ endpoints)'
+    },
+    note: 'Routes are created but need ES module conversion. Check INTEGRATION_CHECKLIST.md'
+  });
+});
+
+// Authentication endpoints
+app.post('/api/auth/register', (req, res) => {
+  try {
+    const { name, email, password, role, phone, governmentId, department, district, aadhaar } = req.body;
+    
+    // Check if user exists
+    const existingUser = users.find(u => u.email === email);
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User already exists with this email'
+      });
+    }
+
+    // Create user
+    const user = {
+      id: userIdCounter++,
+      name,
+      email,
+      password,
+      role,
+      phone,
+      governmentId: governmentId || aadhaar,
+      department,
+      district,
+      token: `token_${userIdCounter-1}_${Date.now()}`,
+      isVerified: false
+    };
+
+    users.push(user);
+    console.log('User registered:', email, 'as', role);
+
+    res.json({
+      success: true,
+      message: 'User registered successfully',
+      token: user.token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        governmentId: user.governmentId,
+        department: user.department,
+        district: user.district,
+        isVerified: user.isVerified
+      }
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during registration'
+    });
+  }
+});
+
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    const user = users.find(u => u.email === email && u.password === password);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    console.log('User logged in:', email);
+    
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token: user.token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        governmentId: user.governmentId,
+        department: user.department,
+        district: user.district,
+        isVerified: user.isVerified
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during login'
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -496,6 +615,9 @@ server.listen(PORT, () => {
   console.log(`📡 Server running on port ${PORT}`);
   console.log(`🌐 Health check: http://localhost:${PORT}/health`);
   console.log(`📊 API status: http://localhost:${PORT}/api/status`);
+  console.log(`🔐 Auth endpoints:`);
+  console.log(`   - POST http://localhost:${PORT}/api/auth/register`);
+  console.log(`   - POST http://localhost:${PORT}/api/auth/login`);
   console.log(`🤖 Gemini API: ${process.env.GEMINI_API_KEY ? '✅ Configured' : '❌ Missing'}`);
   console.log(`🔌 Socket.IO ready for connections`);
 });

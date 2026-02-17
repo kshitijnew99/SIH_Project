@@ -429,7 +429,7 @@ const LandownerDashboard = () => {
             {/* Quick Actions */}
             <div>
               <h2 className="text-2xl font-semibold mb-6">Quick Actions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <Card
                   className="hover:shadow-lg transition-shadow cursor-pointer"
                   onClick={() =>
@@ -478,6 +478,27 @@ const LandownerDashboard = () => {
                     </CardTitle>
                     <CardDescription>
                       Manage your account settings
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+
+                <Card
+                  className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-green-50 to-green-100 border-green-200 relative"
+                  onClick={() =>
+                    (window.location.href = "/lender/dashboard")
+                  }
+                >
+                  <div className="absolute top-2 right-2">
+                    <Badge className="bg-green-500 text-white text-xs">Coming Soon</Badge>
+                  </div>
+                  <CardHeader className="p-6 text-center">
+                    <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                    <CardTitle className="flex items-center justify-center gap-2">
+                      <span>Get Credit</span>
+                      <span className="text-lg">🆕</span>
+                    </CardTitle>
+                    <CardDescription>
+                      AI-powered loan assessment
                     </CardDescription>
                   </CardHeader>
                 </Card>

@@ -29,6 +29,15 @@ const Features = () => {
       link: "/tools",
       color: "bg-gradient-hero",
     },
+    {
+      icon: TrendingUp,
+      title: "AI Credit Assessment 🆕",
+      description: "Get instant credit scores powered by AI. Banks and lenders can evaluate farmer creditworthiness using government data.",
+      benefits: ["AI-powered scoring", "Agri Stack integration", "Instant loan approvals"],
+      link: "/lender/dashboard",
+      color: "bg-gradient-to-br from-green-400 to-green-600",
+      isNew: true,
+    },
   ];
 
   const additionalBenefits = [
@@ -50,9 +59,16 @@ const Features = () => {
         </div>
 
         {/* Main Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {features.map((feature, index) => (
-            <Card key={index} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
+            <Card key={index} className={`hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20 ${
+              feature.isNew ? 'ring-2 ring-green-400 relative' : ''
+            }`}>
+              {feature.isNew && (
+                <div className="absolute -top-3 -right-3 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                  NEW!
+                </div>
+              )}
               <CardHeader>
                 <div className={`w-14 h-14 rounded-lg ${feature.color} flex items-center justify-center mb-4`}>
                   <feature.icon className="h-7 w-7 text-primary-foreground" />

@@ -787,6 +787,16 @@ const AdminDashboard = () => {
                 </Button>
               </Link>
               
+              <Link to="/admin/lender-verification" className="w-full">
+                <Button className="w-full justify-start h-12 bg-green-50 hover:bg-green-100 border-green-200" variant="outline">
+                  <TrendingUp className="h-4 w-4 mr-2 text-green-600" />
+                  <span className="flex items-center gap-2">
+                    Verify Lenders
+                    <Badge className="bg-green-500 text-white">NEW</Badge>
+                  </span>
+                </Button>
+              </Link>
+              
               <Link to="/admin/notification-system" className="w-full">
                 <Button className="w-full justify-start h-12" variant="outline">
                   <Bell className="h-4 w-4 mr-2" />
